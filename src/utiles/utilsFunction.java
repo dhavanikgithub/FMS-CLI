@@ -1,8 +1,16 @@
-package fileHandle.utiles;
+package utiles;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,8 +36,6 @@ public class utilsFunction {
             for (int i = 1; i <= matcher.groupCount(); i++) {
                 result.add(matcher.group(i));
             }
-        } else {
-            System.out.println("Invalid input format.");
         }
         return result;
     }
@@ -68,6 +74,17 @@ public class utilsFunction {
         }
 
         return sb.toString();
+    }
+
+    public static String removeWhiteSpace(String inputString){
+        String result = inputString.replaceAll("\\s+", " ");
+        return result;
+    }
+
+    public static boolean isFileExists(String filePath) throws IOException {
+        File folder = new File(filePath);
+        File canonicalFile = folder.getCanonicalFile();
+        return canonicalFile.exists() && canonicalFile.isFile();
     }
 
 }

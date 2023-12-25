@@ -82,8 +82,8 @@ public class HelpText {
     {
         StringBuilder helpText = new StringBuilder();
         helpText.append("cp or cp -h\n-> for help\n");
-        helpText.append("cp [source] [destination]\n-> for copy file\n");
-        helpText.append("cp -dir [source] [destination]\n-> for copy folder\n");
+        helpText.append("cp [filename]\n-> for copy file\n");
+        helpText.append("cp -dir [foldername]\n-> for copy folder\n");
         System.out.println(helpText);
     }
     public static void moveHelpText()

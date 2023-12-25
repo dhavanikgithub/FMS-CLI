@@ -20,13 +20,12 @@ public class RegularExpressionPattern {
     final Pattern openFolderPattern = Pattern.compile("^(open\\s+.*)");
     final Pattern listFolderPattern = Pattern.compile("^(list)");
     final Pattern backToFolderPattern = Pattern.compile("^(back)");
-    final Pattern renameFilePattern = Pattern.compile("^(rename\\s+.*)");
-    final Pattern renameFolderPattern = Pattern.compile("^(rename\\s+-dir\\s+.*)");
+    final Pattern renameFilePattern = Pattern.compile("rename\\s+(\\S+)");
+    final Pattern renameFolderPattern = Pattern.compile("rename\\s+-dir\\s+(\\S+)");
     final Pattern deleteFilePattern = Pattern.compile("^(del\\s+.*)");
     final Pattern deleteFolderPattern = Pattern.compile("^(del\\s+-dir\\s+.*)");
     final Pattern copyFilePattern = Pattern.compile("^(cp\\s+.*)");
     final Pattern copyFolderPattern = Pattern.compile("^(cp\\s+-dir\\s+.*)");
-
     final Pattern moveFilePattern = Pattern.compile("^(mv\\s+.*)");
     final Pattern moveFolderPattern = Pattern.compile("^(mv\\s+-dir\\s+.*)");
     final Pattern filePropertyPattern = Pattern.compile("^(prp\\s+.*)");
@@ -43,7 +42,7 @@ public class RegularExpressionPattern {
         return folderName.matches(this.folderNamePattern);
     }
 
-    public static boolean isValidPath(String path) {
+    public boolean isValidPath(String path) {
         try {
             Paths.get(path);
         } catch (InvalidPathException | NullPointerException ex) {
