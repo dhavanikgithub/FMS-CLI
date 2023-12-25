@@ -1,16 +1,8 @@
 package utiles;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFileAttributeView;
-import java.nio.file.attribute.PosixFileAttributes;
-import java.nio.file.attribute.PosixFilePermission;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,7 +19,7 @@ public class utilsFunction {
         }
     }
 
-    public static ArrayList<String> extractMultiplePaths(String userInput, String pattern) {
+    /*public static ArrayList<String> extractMultiplePaths(String userInput, String pattern) {
         ArrayList<String> result = new ArrayList<>();
         Pattern regex = Pattern.compile(pattern);
         Matcher matcher = regex.matcher(userInput);
@@ -38,13 +30,51 @@ public class utilsFunction {
             }
         }
         return result;
+    }*/
+
+    public static ArrayList<String> parseDeleteFilesCommand(String input){
+        String regex = "\"([^\"]+)\"|\\S+";
+
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+
+        ArrayList<String> filesName = new ArrayList<>();
+
+        while (matcher.find()) {
+            // Group 1 captures the file name if it's in double quotes
+            // Group 0 captures the file name if it's not in double quotes
+            String fileName = matcher.group(1) != null ? matcher.group(1) : matcher.group();
+            filesName.add(fileName);
+        }
+        return filesName;
     }
 
+    public static boolean isValidFileName(String fileName) {
+        // Regular expression for a valid file name
+        String regex = "^[^\\\\/:*?\"<>|]*$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(fileName);
 
-    public static String[] extractDeleteFileNames(String userInput) {
-        String pattern = "del\\s+([\\S]+(\\s+[\\S]+)*)";
-        String filenamesGroup = extractSinglePath(userInput, pattern);
-        return (filenamesGroup != null) ? filenamesGroup.split("\\s+") : null;
+        if (matcher.matches()) {
+            return true;
+        } else {
+            System.out.println("Characters are not valid in name: \\ / : * ? \" < > |");
+            return false;
+        }
+    }
+
+    public static boolean isValidFolderName(String folderName) {
+        // Regular expression for a valid folder name
+        String regex = "^[^\\\\/:*?\"<>|]*$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(folderName);
+
+        if (matcher.matches()) {
+            return true;
+        } else {
+            System.out.println("Characters are not valid in name: \\ / : * ? \" < > |");
+            return false;
+        }
     }
 
     public static String formatSize(long size) {
@@ -74,17 +104,6 @@ public class utilsFunction {
         }
 
         return sb.toString();
-    }
-
-    public static String removeWhiteSpace(String inputString){
-        String result = inputString.replaceAll("\\s+", " ");
-        return result;
-    }
-
-    public static boolean isFileExists(String filePath) throws IOException {
-        File folder = new File(filePath);
-        File canonicalFile = folder.getCanonicalFile();
-        return canonicalFile.exists() && canonicalFile.isFile();
     }
 
 }

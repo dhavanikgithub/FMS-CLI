@@ -66,8 +66,8 @@ public class HelpText {
     {
         StringBuilder helpText = new StringBuilder();
         helpText.append("rename or rename -h\n-> for help\n");
-        helpText.append("rename [oldFileName] [newFileName]\n-> for rename file\n");
-        helpText.append("rename -dir [oldName] [newName]\n-> for rename folder\n");
+        helpText.append("rename [filename]\n-> for rename file\n");
+        helpText.append("rename -dir [foldername]\n-> for rename folder\n");
         System.out.println(helpText);
     }
     public static void deleteHelpText()
@@ -90,8 +90,8 @@ public class HelpText {
     {
         StringBuilder helpText = new StringBuilder();
         helpText.append("mv or mv -h\n-> for help\n");
-        helpText.append("mv [source] [destination]\n-> for move file\n");
-        helpText.append("mv -dir [source] [destination]\n-> for move folder\n");
+        helpText.append("mv [filename]\n-> for move file\n");
+        helpText.append("mv -dir [foldername]\n-> for move folder\n");
         System.out.println(helpText);
     }
     public static void findHelpText()

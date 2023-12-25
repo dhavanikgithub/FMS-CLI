@@ -1,5 +1,3 @@
-import java.nio.file.InvalidPathException;
-import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,22 +12,21 @@ public class RegularExpressionPattern {
     final Pattern moveHelpTextPattern = Pattern.compile("^(mv\s+-h|mv)$");
     final Pattern findHelpTextPattern = Pattern.compile("^(find\s+-h|find)$");
     final Pattern propertiesHelpTextPattern = Pattern.compile("^(prp\s+-h|prp)$");
-
-    final Pattern createFilePattern = Pattern.compile("^(create\\s+.*)");
-    final Pattern createFolderPattern = Pattern.compile("^(create\\s+-dir\\s+.*)");
-    final Pattern openFolderPattern = Pattern.compile("^(open\\s+.*)");
+    final Pattern createFilePattern = Pattern.compile("^(create )");
+    final Pattern createFolderPattern = Pattern.compile("^(create -dir )");
+    final Pattern openFolderPattern = Pattern.compile("^(open )");
     final Pattern listFolderPattern = Pattern.compile("^(list)");
     final Pattern backToFolderPattern = Pattern.compile("^(back)");
-    final Pattern renameFilePattern = Pattern.compile("rename\\s+(\\S+)");
-    final Pattern renameFolderPattern = Pattern.compile("rename\\s+-dir\\s+(\\S+)");
-    final Pattern deleteFilePattern = Pattern.compile("^(del\\s+.*)");
-    final Pattern deleteFolderPattern = Pattern.compile("^(del\\s+-dir\\s+.*)");
-    final Pattern copyFilePattern = Pattern.compile("^(cp\\s+.*)");
-    final Pattern copyFolderPattern = Pattern.compile("^(cp\\s+-dir\\s+.*)");
-    final Pattern moveFilePattern = Pattern.compile("^(mv\\s+.*)");
-    final Pattern moveFolderPattern = Pattern.compile("^(mv\\s+-dir\\s+.*)");
-    final Pattern filePropertyPattern = Pattern.compile("^(prp\\s+.*)");
-    final Pattern findFilePattern = Pattern.compile("^(find\\s+.*)");
+    final Pattern renameFilePattern = Pattern.compile("rename (\\S+)");
+    final Pattern renameFolderPattern = Pattern.compile("rename -dir (\\S+)");
+    final Pattern deleteFilePattern = Pattern.compile("^(del )");
+    final Pattern deleteFolderPattern = Pattern.compile("^(del -dir )");
+    final Pattern copyFilePattern = Pattern.compile("^(cp )");
+    final Pattern copyFolderPattern = Pattern.compile("^(cp -dir )");
+    final Pattern moveFilePattern = Pattern.compile("^(mv )");
+    final Pattern moveFolderPattern = Pattern.compile("^(mv -dir )");
+    final Pattern filePropertyPattern = Pattern.compile("^(prp )");
+    final Pattern findFilePattern = Pattern.compile("^(find )");
     final String folderNamePattern = "^[^\\\\/|?:*<>\"]*$";
 
 
@@ -42,12 +39,4 @@ public class RegularExpressionPattern {
         return folderName.matches(this.folderNamePattern);
     }
 
-    public boolean isValidPath(String path) {
-        try {
-            Paths.get(path);
-        } catch (InvalidPathException | NullPointerException ex) {
-            return false;
-        }
-        return true;
-    }
 }

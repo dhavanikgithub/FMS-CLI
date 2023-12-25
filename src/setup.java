@@ -23,9 +23,6 @@ class setup{
         rep = new RegularExpressionPattern();
         listFilesAndFolders();
 
-
-
-
         while(true)
         {
             System.out.print(currentDirPath.get(0)+">: ");
@@ -53,25 +50,15 @@ class setup{
                 }
                 else if (rep.matchPattern(rep.backToFolderPattern,op))
                 {
-                    try{
-                        if(currentDirPath.size()>1)
-                        {
-                            currentDirPath.remove(0);
-                        }
-                        listFilesAndFolders();
-                    }
-                    catch (ArrayIndexOutOfBoundsException ex)
-                    {
-                        System.out.println("Array index out of bound");
-                    }
+                    backToPath();
                 }
                 else if (rep.matchPattern(rep.renameFolderPattern,op))
                 {
-                    operationRenameFolder(op);
+                    operationRenameFolderBasic(op);
                 }
                 else if (rep.matchPattern(rep.renameFilePattern,op))
                 {
-                    operationRenameFile(op);
+                    operationRenameFileBasic(op);
                 }
                 else if(rep.matchPattern(rep.deleteFolderPattern,op))
                 {
@@ -103,24 +90,7 @@ class setup{
                 }
                 else if(rep.matchPattern(rep.findFilePattern,op))
                 {
-                    try {
-                        String fileName = utilsFunction.extractSinglePath(op,"find\\s+(\\S+)");
-                        List<Path> foundFiles = FMS_CLI.findFiles(mainDirPath, fileName, null);
-
-                        if (!foundFiles.isEmpty()) {
-                            System.out.println("Found files:");
-                            for (Path file : foundFiles) {
-                                System.out.println(file);
-                            }
-                        } else {
-                            System.out.println("No matching files found.");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.out.println("Invalid Input");
-                    }
-
+                    operationFindFiles(op);
                 }
                 else{
                     HelpText.matchCommand(op);
@@ -130,6 +100,58 @@ class setup{
         }
     }
 
+    public static void operationFindFiles(String op){
+        try {
+            System.out.println("Finding....");
+            String fileName = utilsFunction.extractSinglePath(op,"find\\s+(\\S+)");
+            File[] rootDrive = File.listRoots();
+            List<Path> foundFiles=null;
+            if(currentDirPath.get(0).equals("root"))
+            {
+                for(File sysDrive : rootDrive){
+                    if (foundFiles==null)
+                    {
+                        foundFiles = FMS_CLI.findFiles(sysDrive.getPath(), fileName, null);
+                    }
+                    else{
+                        foundFiles.addAll(FMS_CLI.findFiles(sysDrive.getPath(), fileName, null));
+                    }
+                }
+            }
+            else{
+                foundFiles = FMS_CLI.findFiles(currentDirPath.get(0), fileName, null);
+            }
+
+
+            if (!Objects.requireNonNull(foundFiles).isEmpty()) {
+                System.out.println("Found files:");
+                for (Path file : foundFiles) {
+                    System.out.println(file);
+                }
+                System.out.println("Total "+foundFiles.size()+" files found");
+            } else {
+                System.out.println("No matching files found.");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.out.println("Invalid Input");
+        }
+    }
+
+    public static void backToPath(){
+        try{
+            if(currentDirPath.size()>1)
+            {
+                currentDirPath.remove(0);
+            }
+            listFilesAndFolders();
+        }
+        catch (ArrayIndexOutOfBoundsException ex)
+        {
+            System.out.println("Array index out of bound");
+        }
+    }
     public static void listFilesAndFolders()
     {
         if (currentDirPath.get(0).equals("root"))
@@ -139,6 +161,8 @@ class setup{
             for(File sysDrive : rootDrive){
                 System.out.println("Drive : " + sysDrive);
             }
+            System.out.println("\nhelp (Show the command list)");
+            System.out.println("exit|quit|stop : Terminate application\n");
             return;
         }
         try{
@@ -179,7 +203,12 @@ class setup{
     private static void operationCreateFolder(String op)
     {
         try{
-            File file = new File(Objects.requireNonNull(utilsFunction.extractSinglePath(op, "create\s+-dir\s+(\\S+)")));
+            String extractedFolderName = op.replace("create -dir ","").strip();
+            if(!utilsFunction.isValidFolderName(extractedFolderName))
+            {
+                return;
+            }
+            File file = new File(extractedFolderName);
             if (!file.isAbsolute()) {
                 file = new File(currentDirPath.get(0)+"\\"+file.getPath());
             }
@@ -204,10 +233,14 @@ class setup{
     private static void operationCreateFile(String op)
     {
         try{
-            String filePath = utilsFunction.extractSinglePath(op,"create\\s+(\\S+)");
-            File file = new File(Objects.requireNonNull(filePath));
+            String extractedFileName = op.replace("create ","").strip();
+            if(!utilsFunction.isValidFileName(extractedFileName))
+            {
+                return;
+            }
+            File file = new File(Objects.requireNonNull(extractedFileName));
             if (!file.isAbsolute()) {
-                file = new File(currentDirPath.get(0)+"\\"+filePath);
+                file = new File(currentDirPath.get(0)+"\\"+extractedFileName);
             }
             if (!Files.isWritable(Paths.get(file.getParent()))) {
                 System.out.println("Permission denied to create file");
@@ -223,7 +256,8 @@ class setup{
 
     private static void operationOpenFolder(String op)
     {
-        File file = new File(Objects.requireNonNull(utilsFunction.extractSinglePath(op, "open\\s+(\\S+)")));
+        String extractedFolderName = op.replace("open ","");
+        File file = new File(extractedFolderName);
         if (!file.isAbsolute()) {
             file = new File(currentDirPath.get(0) + "\\" + file.getPath());
         }
@@ -237,22 +271,16 @@ class setup{
         }
     }
 
-    //Rename
     private static void operationRenameFolderBasic(String op){
         try{
-            String userInputPath = utilsFunction.extractSinglePath(op,"rename\\s+-dir\\s+(\\S+)");
-            if(userInputPath==null)
-            {
-                System.out.println("Input Path is null");
-                return;
-            }
-            File sourcePath = new File(userInputPath);
+            String extractedFolderName = op.replace("rename -dir ","").strip();
+            File sourcePath = new File(extractedFolderName);
             File destinationPath;
             if(!sourcePath.isAbsolute())
             {
                 sourcePath = new File(currentDirPath.get(0)+"\\"+sourcePath.getPath());
             }
-            if(!sourcePath.exists() || !rep.isValidPath(sourcePath.getPath()) || sourcePath.isFile() || sourcePath.getPath().equals(currentDirPath.get(0)) || sourcePath.getName().equals("."))
+            if(!sourcePath.exists() || sourcePath.isFile() || sourcePath.getPath().equals(currentDirPath.get(0)) || sourcePath.getName().equals("."))
             {
                 System.out.println("Folder not found");
                 return;
@@ -262,7 +290,11 @@ class setup{
                 return;
             }
             System.out.print("New folder name: ");
-            String newFolderName = userInput.nextLine();
+            String newFolderName = userInput.nextLine().strip();
+            if(!utilsFunction.isValidFolderName(newFolderName))
+            {
+                return;
+            }
             destinationPath = new File(sourcePath.getParentFile()+"\\"+newFolderName);
             if(destinationPath.exists() && destinationPath.isFile())
             {
@@ -277,7 +309,7 @@ class setup{
         }
     }
 
-    private static void operationRenameFolder(String op)
+    /*private static void operationRenameFolder(String op)
     {
         try{
             ArrayList<String> filePaths = utilsFunction.extractMultiplePaths(op,"rename\\s+-dir\\s+(\\S+)\\s+(\\S+)");
@@ -291,7 +323,7 @@ class setup{
             {
                 destinationPath = new File(currentDirPath.get(0)+"\\"+destinationPath.getPath());
             }
-            if(!sourcePath.exists() || !rep.isValidPath(sourcePath.getPath()) || sourcePath.isFile() || sourcePath.getPath().equals(currentDirPath.get(0)) || sourcePath.getName().equals("."))
+            if(!sourcePath.exists() || sourcePath.isFile() || sourcePath.getPath().equals(currentDirPath.get(0)) || sourcePath.getName().equals("."))
             {
                 System.out.println("Folder not found");
                 return;
@@ -312,12 +344,13 @@ class setup{
             operationRenameFolderBasic(op);
             //System.out.println("Due to invalid input failed to rename");
         }
-    }
+    }*/
 
     private static void operationRenameFileBasic(String op)
     {
         try{
-            File sourcePath = new File(Objects.requireNonNull(utilsFunction.extractSinglePath(op, "rename\\s+(\\S+)")));
+            String extractedFolderName = op.replace("rename ","").strip();
+            File sourcePath = new File(extractedFolderName);
             File destinationPath;
             if(!sourcePath.isAbsolute())
             {
@@ -325,7 +358,7 @@ class setup{
             }
             if(!sourcePath.exists())
             {
-                System.out.println(sourcePath.getName()+" : File not found to rename");
+                System.out.println(sourcePath.getName()+" : File not found");
                 return;
             }
             if (!Files.isWritable(Paths.get(sourcePath.getPath()))) {
@@ -333,7 +366,11 @@ class setup{
                 return;
             }
             System.out.print("New file name: ");
-            String newFileName = userInput.nextLine();
+            String newFileName = userInput.nextLine().strip();
+            if(!utilsFunction.isValidFileName(newFileName))
+            {
+                return;
+            }
             destinationPath = new File(sourcePath.getParentFile()+"\\"+newFileName);
             if(destinationPath.exists() && destinationPath.isFile())
             {
@@ -350,7 +387,7 @@ class setup{
         }
     }
 
-    private static void operationRenameFile(String op)
+    /*private static void operationRenameFile(String op)
     {
         try{
             ArrayList<String> filePaths = utilsFunction.extractMultiplePaths(op,"rename\\s+(\\S+)\\s+(\\S+)");
@@ -385,18 +422,18 @@ class setup{
         {
             operationRenameFileBasic(op);
         }
-    }
+    }*/
 
-    //Delete
     private static void operationDeleteFolder(String op)
     {
         try{
-            File folderPath = new File(Objects.requireNonNull(utilsFunction.extractSinglePath(op, "del\\s+-dir\\s+(\\S+)")));
+            String extractedFolderName = op.replace("del -dir ","").strip();
+            File folderPath = new File(extractedFolderName);
             if(!folderPath.isAbsolute())
             {
                 folderPath = new File(currentDirPath.get(0)+"//"+folderPath.getPath());
             }
-            if(!folderPath.exists() || folderPath.isFile() || !rep.isValidPath(folderPath.getPath()) || folderPath.getPath().equals(currentDirPath.get(0)) || folderPath.getName().equals("."))
+            if(!folderPath.exists() || folderPath.isFile() || folderPath.getPath().equals(currentDirPath.get(0)) || folderPath.getName().equals("."))
             {
                 System.out.println("Folder not found");
                 return;
@@ -412,26 +449,24 @@ class setup{
     private static void operationDeleteFiles(String op)
     {
         try{
-            String[] fileNames = utilsFunction.extractDeleteFileNames(op);
-            if(fileNames!=null)
-            {
-                for(String fileName : fileNames){
-                    File fileObject = new File(currentDirPath.get(0)+"//"+fileName);
-                    if(fileObject.exists() && fileObject.isFile())
-                    {
-                        if (!Files.isWritable(Paths.get(fileObject.getPath()))) {
-                            System.out.println(fileObject.getName()+" : Permission denied");
-                            continue;
-                        }
-                        if (fileObject.delete()) {
-                            System.out.println(fileObject.getName()+" : Deleted");
-                        } else {
-                            System.out.println(fileObject.getName()+" : Failed to Delete");
-                        }
+            String extractedFileName = op.replace("del ","");
+            ArrayList<String> fileNames = utilsFunction.parseDeleteFilesCommand(extractedFileName);
+            for(String fileName : fileNames){
+                File fileObject = new File(currentDirPath.get(0)+"//"+fileName);
+                if(fileObject.exists() && fileObject.isFile())
+                {
+                    if (!Files.isWritable(Paths.get(fileObject.getPath()))) {
+                        System.out.println(fileObject.getName()+" : Permission denied");
+                        continue;
                     }
-                    else{
-                        System.out.println(fileObject.getName()+" : file not found");
+                    if (fileObject.delete()) {
+                        System.out.println(fileObject.getName()+" : Deleted");
+                    } else {
+                        System.out.println(fileObject.getName()+" : Failed to Delete");
                     }
+                }
+                else{
+                    System.out.println(fileObject.getName()+" : file not found");
                 }
             }
         }
@@ -441,12 +476,11 @@ class setup{
         }
     }
 
-
-    //Copy
     private static void operationCopyAndNavPastFolder(String op)
     {
         try{
-            File sourcePath = new File(Objects.requireNonNull(utilsFunction.extractSinglePath(op, "cp\\s+-dir\\s+(\\S+)")));
+            String extractedFolderName = op.replace("cp -dir ","").strip();
+            File sourcePath = new File(extractedFolderName);
             File destinationPath;
             if(!sourcePath.isAbsolute())
             {
@@ -467,6 +501,11 @@ class setup{
                 {
                     if(newOperation.equals("y") || newOperation.equals("Y"))
                     {
+                        if(currentDirPath.get(0).equals("root"))
+                        {
+                            System.out.println("Not possible to past");
+                            continue;
+                        }
                         destinationPath = new File(currentDirPath.get(0)+"//"+sourcePath.getName());
                         if(destinationPath.exists() && destinationPath.isDirectory())
                         {
@@ -552,7 +591,8 @@ class setup{
     private static void operationCopyAndNavPastFile(String op)
     {
         try{
-            File sourcePath = new File(Objects.requireNonNull(utilsFunction.extractSinglePath(op, "cp\\s+(\\S+)")));
+            String extractedFileName = op.replace("cp ","").strip();
+            File sourcePath = new File(extractedFileName);
             File destinationPath;
 
             if(!sourcePath.isAbsolute())
@@ -569,6 +609,11 @@ class setup{
                     {
                         if(newOperation.equals("y") || newOperation.equals("Y"))
                         {
+                            if(currentDirPath.get(0).equals("root"))
+                            {
+                                System.out.println("Not possible to past");
+                                continue;
+                            }
                             destinationPath = new File(currentDirPath.get(0)+"//"+sourcePath.getName());
                             if(destinationPath.exists() && destinationPath.isFile())
                             {
@@ -654,14 +699,15 @@ class setup{
     private static void operationMoveAndNavPastFolder(String op)
     {
         try{
-            File sourcePath = new File(Objects.requireNonNull(utilsFunction.extractSinglePath(op, "mv\\s+-dir\\s+(\\S+)")));
+            String extractedFileName = op.replace("mv -dir ","").strip();
+            File sourcePath = new File(extractedFileName);
             File destinationPath;
             if(!sourcePath.isAbsolute())
             {
                 sourcePath = new File(currentDirPath.get(0)+"//"+sourcePath.getPath());
             }
 
-            if(!sourcePath.exists() || !rep.isValidPath(sourcePath.getPath()) || sourcePath.isFile() || sourcePath.getPath().equals(currentDirPath.get(0)) || sourcePath.getName().equals("."))
+            if(!sourcePath.exists() || sourcePath.isFile() || sourcePath.getPath().equals(currentDirPath.get(0)) || sourcePath.getName().equals("."))
             {
                 System.out.println("Folder not found");
                 return;
@@ -674,6 +720,11 @@ class setup{
                 {
                     if(newOperation.equals("y") || newOperation.equals("Y"))
                     {
+                        if(currentDirPath.get(0).equals("root"))
+                        {
+                            System.out.println("Not possible to past");
+                            continue;
+                        }
                         destinationPath = new File(currentDirPath.get(0)+"//"+sourcePath.getName());
                         if(destinationPath.exists() && destinationPath.isDirectory())
                         {
@@ -719,7 +770,8 @@ class setup{
     private static void operationMoveAndNavPastFile(String op)
     {
         try{
-            File sourcePath = new File(Objects.requireNonNull(utilsFunction.extractSinglePath(op, "mv\\s+(\\S+)")));
+            String extractedFileName = op.replace("mv ","").strip();
+            File sourcePath = new File(extractedFileName);
             File destinationPath;
             if(!sourcePath.isAbsolute())
             {
@@ -739,6 +791,11 @@ class setup{
                 {
                     if(newOperation.equals("y") || newOperation.equals("Y"))
                     {
+                        if(currentDirPath.get(0).equals("root"))
+                        {
+                            System.out.println("Not possible to past");
+                            continue;
+                        }
                         destinationPath = new File(currentDirPath.get(0)+"//"+sourcePath.getName());
                         if(destinationPath.exists() && destinationPath.isFile())
                         {
@@ -858,7 +915,8 @@ class setup{
     private static void viewFileProperties(String op)
     {
         try{
-            File filePath = new File(Objects.requireNonNull(utilsFunction.extractSinglePath(op, "prp\\s+(\\S+)")));
+            String extractedFileName = op.replace("prp ","");
+            File filePath = new File(extractedFileName);
             if(!filePath.isAbsolute())
             {
                 filePath = new File(currentDirPath.get(0)+"//"+filePath.getPath());

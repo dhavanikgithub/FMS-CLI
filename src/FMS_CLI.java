@@ -234,7 +234,7 @@ public class FMS_CLI {
             @Override
             public FileVisitResult visitFileFailed(Path file, IOException exc) {
                 // Handle error while visiting a file
-                System.err.println("Error visiting file: " + file.toString() + " - " + exc.getMessage());
+                //System.err.println("Error visiting file: " + file.toString() + " - " + exc.getMessage());
                 return FileVisitResult.CONTINUE;
             }
         });
