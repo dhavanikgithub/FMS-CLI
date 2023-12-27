@@ -1,3 +1,5 @@
+import utiles.utilsFunction;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,23 +31,6 @@ public class FMS_CLI {
         Path path = Paths.get(filePath);
         Files.createDirectories(path);
         System.out.println("Directory is created!");
-    }
-
-    public static ArrayList<String> extractParentFolders(String path) {
-        ArrayList<String> parentFolders = new ArrayList<>();
-        String[] pathSegments = path.split("/"); // Assuming path separator is "/"
-        StringBuilder currentPath = new StringBuilder();
-
-        for (int i = 0; i < pathSegments.length - 1; i++) {
-            currentPath.append(pathSegments[i]);
-            parentFolders.add(currentPath.toString());
-            currentPath.append("/");
-        }
-
-        // Add the root folder (drive name in this case)
-        parentFolders.add(pathSegments[0] + "/");
-
-        return parentFolders;
     }
 
     public static void renameFile(String sourcePath, String destinationPath) {
@@ -223,7 +208,7 @@ public class FMS_CLI {
         // Print file properties
         System.out.println("File Name: " + path.getFileName());
         System.out.println("Absolute Path: " + path.toAbsolutePath());
-        System.out.println("Size: " + attributes.size() + " bytes");
+        System.out.println("Size: " + utilsFunction.formatSize(attributes.size()));
         System.out.println("Creation Time: " + formatTime(attributes.creationTime()));
         System.out.println("Last Modified Time: " + formatTime(attributes.lastModifiedTime()));
         System.out.println("Last Access Time: " + formatTime(attributes.lastAccessTime()));

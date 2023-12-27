@@ -1,8 +1,6 @@
 package utiles;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -10,25 +8,6 @@ import java.util.regex.Pattern;
 
 public class utilsFunction {
 
-    public static String extractSinglePath(String userInput, String pattern) {
-        Pattern regex = Pattern.compile(pattern);
-        Matcher matcher = regex.matcher(userInput);
-
-        if (matcher.find()) {
-            return matcher.group(1);
-        } else {
-            return null;
-        }
-    }
-
-    public static void extractParentFolders(String filePath) {
-        Path path = Paths.get(filePath).toAbsolutePath().normalize();
-
-        while (path != null) {
-            System.out.println(path);
-            path = path.getParent();
-        }
-    }
 
     /*public static ArrayList<String> extractMultiplePaths(String userInput, String pattern) {
         ArrayList<String> result = new ArrayList<>();
@@ -98,7 +77,7 @@ public class utilsFunction {
             unitIndex++;
         }
 
-        return new DecimalFormat("#,##0.#").format(sizeInUnits) + units[unitIndex];
+        return new DecimalFormat("#,##0.#").format(sizeInUnits) +" "+ units[unitIndex];
     }
 
     public static String getPermissions(File file) {

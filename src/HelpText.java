@@ -66,7 +66,7 @@ public class HelpText {
     {
         StringBuilder helpText = new StringBuilder();
         helpText.append("rename or rename -h\n-> for help\n");
-        helpText.append("rename [filename]\n-> for rename file\n");
+        helpText.append("rename -file [filename]\n-> for rename file\n");
         helpText.append("rename -dir [foldername]\n-> for rename folder\n");
         System.out.println(helpText);
     }
@@ -74,7 +74,7 @@ public class HelpText {
     {
         StringBuilder helpText = new StringBuilder();
         helpText.append("del or del -h\n-> for help\n");
-        helpText.append("del [fileName1] [fileName2] ...\n-> for delete multiple files\n");
+        helpText.append("del -file [fileName1] [fileName2] ...\n-> for delete multiple files\n");
         helpText.append("del -dir [folderName]\n-> for delete folder\n");
         System.out.println(helpText);
     }
@@ -82,7 +82,7 @@ public class HelpText {
     {
         StringBuilder helpText = new StringBuilder();
         helpText.append("cp or cp -h\n-> for help\n");
-        helpText.append("cp [filename]\n-> for copy file\n");
+        helpText.append("cp -file [filename]\n-> for copy file\n");
         helpText.append("cp -dir [foldername]\n-> for copy folder\n");
         System.out.println(helpText);
     }
@@ -90,7 +90,7 @@ public class HelpText {
     {
         StringBuilder helpText = new StringBuilder();
         helpText.append("mv or mv -h\n-> for help\n");
-        helpText.append("mv [filename]\n-> for move file\n");
+        helpText.append("mv -file [filename]\n-> for move file\n");
         helpText.append("mv -dir [foldername]\n-> for move folder\n");
         System.out.println(helpText);
     }
@@ -98,7 +98,8 @@ public class HelpText {
     {
         StringBuilder helpText = new StringBuilder();
         helpText.append("find or find -h\n-> for help\n");
-        helpText.append("find [fileName or extension]\n-> for search the file by name\n");
+        helpText.append("find [fileName or extension]\n-> for search the file in current path\n");
+        helpText.append("find -g [fileName or extension]\n-> for search the file in global\n");
         System.out.println(helpText);
     }
     public static void propertiesHelpText()
