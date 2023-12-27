@@ -1,6 +1,8 @@
 package utiles;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -16,6 +18,15 @@ public class utilsFunction {
             return matcher.group(1);
         } else {
             return null;
+        }
+    }
+
+    public static void extractParentFolders(String filePath) {
+        Path path = Paths.get(filePath).toAbsolutePath().normalize();
+
+        while (path != null) {
+            System.out.println(path);
+            path = path.getParent();
         }
     }
 

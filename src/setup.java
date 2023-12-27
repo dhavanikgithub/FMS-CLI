@@ -3,10 +3,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 class setup{
     public static String mainDirPath = "root";
@@ -88,9 +85,13 @@ class setup{
                 {
                     viewFileProperties(op);
                 }
+                else if(rep.matchPattern(rep.findFileGlobPattern,op))
+                {
+                    operationFindFiles(op,true);
+                }
                 else if(rep.matchPattern(rep.findFilePattern,op))
                 {
-                    operationFindFiles(op);
+                    operationFindFiles(op,false);
                 }
                 else{
                     HelpText.matchCommand(op);
@@ -100,14 +101,15 @@ class setup{
         }
     }
 
-    public static void operationFindFiles(String op){
+    public static void operationFindFiles(String op, Boolean isGloble){
         try {
             System.out.println("Finding....");
-            String fileName = utilsFunction.extractSinglePath(op,"find\\s+(\\S+)");
             File[] rootDrive = File.listRoots();
             List<Path> foundFiles=null;
-            if(currentDirPath.get(0).equals("root"))
+
+            if(isGloble)
             {
+                String fileName = op.replace("find -g ","").strip();
                 for(File sysDrive : rootDrive){
                     if (foundFiles==null)
                     {
@@ -119,9 +121,23 @@ class setup{
                 }
             }
             else{
-                foundFiles = FMS_CLI.findFiles(currentDirPath.get(0), fileName, null);
+                String fileName = op.replace("find ","").strip();
+                if(currentDirPath.get(0).equals("root"))
+                {
+                    for(File sysDrive : rootDrive){
+                        if (foundFiles==null)
+                        {
+                            foundFiles = FMS_CLI.findFiles(sysDrive.getPath(), fileName, null);
+                        }
+                        else{
+                            foundFiles.addAll(FMS_CLI.findFiles(sysDrive.getPath(), fileName, null));
+                        }
+                    }
+                }
+                else{
+                    foundFiles = FMS_CLI.findFiles(currentDirPath.get(0), fileName, null);
+                }
             }
-
 
             if (!Objects.requireNonNull(foundFiles).isEmpty()) {
                 System.out.println("Found files:");
@@ -156,6 +172,8 @@ class setup{
     {
         if (currentDirPath.get(0).equals("root"))
         {
+            currentDirPath.clear();
+            currentDirPath.add("root");
             File[] rootDrive = File.listRoots();
 
             for(File sysDrive : rootDrive){
@@ -165,38 +183,58 @@ class setup{
             System.out.println("exit|quit|stop : Terminate application\n");
             return;
         }
-        try{
+        try {
             File mainDir = new File(currentDirPath.get(0));
 
             if (!(mainDir.exists() && mainDir.isDirectory())) {
                 System.out.println("Folder not found");
                 return;
             }
+
             System.out.println("**********************************************");
-            System.out.println("Files from directory : " + mainDir);
+            System.out.println("Files and directories from directory : " + mainDir);
             System.out.println("**********************************************\n");
 
             File[] filesAndFolders = mainDir.listFiles();
 
             if (filesAndFolders != null) {
-                for (File file : filesAndFolders) {
-                    String fileType = file.isDirectory() ? "d" : "-";
-                    String permissions = utilsFunction.getPermissions(file);
-                    String size = file.isFile() ? utilsFunction.formatSize(file.length()) : "";
-                    String formattedName = file.getName();
+                // Separate directories and files
+                File[] directories = Arrays.stream(filesAndFolders)
+                        .filter(File::isDirectory)
+                        .toArray(File[]::new);
 
+                File[] files = Arrays.stream(filesAndFolders)
+                        .filter(File::isFile)
+                        .toArray(File[]::new);
+
+                // Sort directories and files
+                Arrays.sort(directories, Comparator.comparing(File::getName));
+                Arrays.sort(files, Comparator.comparing(File::getName));
+
+                System.out.println("------Directory------");
+                // Print directories
+                for (File directory : directories) {
+                    String permissions = utilsFunction.getPermissions(directory);
+                    String formattedName = directory.getName();
+                    System.out.printf("%s%s %-9s %-20s%n", "d", permissions, "", formattedName);
+                }
+                System.out.println("------Files------");
+                // Print files
+                for (File file : files) {
+                    String fileType = "-";
+                    String permissions = utilsFunction.getPermissions(file);
+                    String size = utilsFunction.formatSize(file.length());
+                    String formattedName = file.getName();
                     System.out.printf("%s%s %-9s %-20s%n", fileType, permissions, size, formattedName);
                 }
+            } else {
+                System.out.println("Folder is empty");
             }
-            else{
-                System.out.println("Folder was empty");
-            }
+
             System.out.println("\nhelp (Show the command list)");
             System.out.println("exit|quit|stop : Terminate application\n");
-        }
-        catch (Exception ex)
-        {
-            System.out.println("Something wrong");
+        } catch (Exception ex) {
+            System.out.println("Something went wrong");
         }
     }
 
@@ -256,8 +294,19 @@ class setup{
 
     private static void operationOpenFolder(String op)
     {
-        String extractedFolderName = op.replace("open ","");
+        String extractedFolderName = op.replace("open ","").strip();
+
         File file = new File(extractedFolderName);
+        if(file.getPath().equalsIgnoreCase(currentDirPath.get(0)))
+        {
+            return;
+        }
+        if(extractedFolderName.equals("root"))
+        {
+            currentDirPath.add(0,"root");
+            listFilesAndFolders();
+            return;
+        }
         if (!file.isAbsolute()) {
             file = new File(currentDirPath.get(0) + "\\" + file.getPath());
         }
@@ -528,11 +577,7 @@ class setup{
                     }
                     else if(rep.matchPattern(rep.backToFolderPattern,newOperation))
                     {
-                        if(currentDirPath.size()>1)
-                        {
-                            currentDirPath.remove(0);
-                        }
-                        listFilesAndFolders();
+                        backToPath();
                         flag--;
                     }
                 }
@@ -636,11 +681,7 @@ class setup{
                         }
                         else if(rep.matchPattern(rep.backToFolderPattern,newOperation))
                         {
-                            if(currentDirPath.size()>1)
-                            {
-                                currentDirPath.remove(0);
-                            }
-                            listFilesAndFolders();
+                            backToPath();
                             flag--;
                         }
                     }
@@ -747,11 +788,7 @@ class setup{
                     }
                     else if(rep.matchPattern(rep.backToFolderPattern,newOperation))
                     {
-                        if(currentDirPath.size()>1)
-                        {
-                            currentDirPath.remove(0);
-                        }
-                        listFilesAndFolders();
+                        backToPath();
                         flag--;
                     }
                 }
@@ -818,11 +855,7 @@ class setup{
                     }
                     else if(rep.matchPattern(rep.backToFolderPattern,newOperation))
                     {
-                        if(currentDirPath.size()>1)
-                        {
-                            currentDirPath.remove(0);
-                        }
-                        listFilesAndFolders();
+                        backToPath();
                         flag--;
                     }
                 }

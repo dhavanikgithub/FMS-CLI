@@ -27,6 +27,7 @@ public class RegularExpressionPattern {
     final Pattern moveFolderPattern = Pattern.compile("^(mv -dir )");
     final Pattern filePropertyPattern = Pattern.compile("^(prp )");
     final Pattern findFilePattern = Pattern.compile("^(find )");
+    final Pattern findFileGlobPattern = Pattern.compile("^(find -g )");
     final String folderNamePattern = "^[^\\\\/|?:*<>\"]*$";
 
 

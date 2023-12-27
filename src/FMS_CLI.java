@@ -31,6 +31,23 @@ public class FMS_CLI {
         System.out.println("Directory is created!");
     }
 
+    public static ArrayList<String> extractParentFolders(String path) {
+        ArrayList<String> parentFolders = new ArrayList<>();
+        String[] pathSegments = path.split("/"); // Assuming path separator is "/"
+        StringBuilder currentPath = new StringBuilder();
+
+        for (int i = 0; i < pathSegments.length - 1; i++) {
+            currentPath.append(pathSegments[i]);
+            parentFolders.add(currentPath.toString());
+            currentPath.append("/");
+        }
+
+        // Add the root folder (drive name in this case)
+        parentFolders.add(pathSegments[0] + "/");
+
+        return parentFolders;
+    }
+
     public static void renameFile(String sourcePath, String destinationPath) {
         // Create an object of the File class
         // Replace the file path with path of the directory
