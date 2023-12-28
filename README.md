@@ -21,7 +21,7 @@ with the file system.
 2. **Rename Operation** : File `rename -file filename or path` Folder: `rename -dir foldername or path`
 3. **Copy Operation** : File: `cp -file filename or path` Folder: `cp -dir foldername or path`
 4. **Move Operation** : File: `mv -file filename or path` Folder: `mv -dir foldername or path`
-5. **Search Operation** : Local: `find filename or extention` Global `find -g filename or extention`
+5. **Search Operation** : Local: `find filename or extention` Global: `find -g filename or extention`
 6. **Delete Operation** : File: `del -file [filename1/path1] [filename2/path2] .....` Folder: `del -dir foldername or path`
 7. **Folder Navigation** : Open: `open foldername or path` Back: `back`
 8. **Files and Folders Linsting** : `list`
