@@ -26,3 +26,5 @@ with the file system.
 7. **Folder Navigation** : Open: `open foldername or path` Back: `back`
 8. **Files and Folders Linsting** : `list`
 9. **File or Folder Details** : `prp filename or foldername or path`
+10. **Help** : `help`
+11. **Terminate Application** : `exit` or `quit` or `stop`
