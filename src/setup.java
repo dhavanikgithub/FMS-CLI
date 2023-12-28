@@ -1,4 +1,5 @@
 import utiles.utilsFunction;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -105,6 +106,7 @@ class setup{
         try {
             ProgressBarRotating pb1 = new ProgressBarRotating();
             pb1.start();
+            long startTime = System.currentTimeMillis();
             //System.out.println("Finding....");
             File[] rootDrive = File.listRoots();
             List<Path> foundFiles=null;
@@ -140,6 +142,8 @@ class setup{
                     foundFiles = FMS_CLI.findFiles(currentDirPath, fileName, null);
                 }
             }
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
             pb1.showProgress = false;
             if (!Objects.requireNonNull(foundFiles).isEmpty()) {
                 System.out.println("\rFound files:");
@@ -147,6 +151,7 @@ class setup{
                     System.out.println(file);
                 }
                 System.out.println("Total "+foundFiles.size()+" files found");
+                System.out.println("Total time taken: " + FMS_CLI.formatDuration(duration));;
             } else {
                 System.out.println("\rNo matching files found.");
             }
@@ -487,22 +492,36 @@ class setup{
     private static void operationDeleteFolder(String op)
     {
         try{
-            String extractedFolderName = op.replace("del -dir ","").strip();
-            File folderPath = new File(extractedFolderName);
-            if(!folderPath.isAbsolute())
+            while (true)
             {
-                folderPath = new File(currentDirPath+"//"+folderPath.getPath());
+                System.out.print("Are you want sure delete folder (YES|NO): ");
+                String deleteFolderConfirmation = userInput.nextLine().strip();
+                if(deleteFolderConfirmation.equalsIgnoreCase("no"))
+                {
+                    break;
+                }
+                else if(deleteFolderConfirmation.equalsIgnoreCase("yes"))
+                {
+                    String extractedFolderName = op.replace("del -dir ","").strip();
+                    File folderPath = new File(extractedFolderName);
+                    if(!folderPath.isAbsolute())
+                    {
+                        folderPath = new File(currentDirPath+"//"+folderPath.getPath());
+                    }
+                    if(!folderPath.exists() || folderPath.isFile() || folderPath.getPath().equals(currentDirPath) || folderPath.getName().equals("."))
+                    {
+                        System.out.println("Folder not found");
+                        return;
+                    }
+                    FMS_CLI.deleteFolder(folderPath.getPath());
+                    break;
+                }
             }
-            if(!folderPath.exists() || folderPath.isFile() || folderPath.getPath().equals(currentDirPath) || folderPath.getName().equals("."))
-            {
-                System.out.println("Folder not found");
-                return;
-            }
-            FMS_CLI.deleteFolder(folderPath.getPath());
+
         }
         catch (Exception ex)
         {
-            System.out.println("Invalid input found");
+            System.out.println("\nInvalid input found");
         }
     }
 
@@ -966,4 +985,5 @@ class setup{
         }
 
     }
+
 }
