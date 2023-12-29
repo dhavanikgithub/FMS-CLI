@@ -1,3 +1,4 @@
+import org.apache.commons.lang3.SystemUtils;
 import utiles.utilsFunction;
 
 import java.io.File;
@@ -16,6 +17,11 @@ class setup{
 
 
     public static void main(String[] args){
+        if(!SystemUtils.IS_OS_WINDOWS && !SystemUtils.IS_OS_LINUX && SystemUtils.IS_OS_MAC)
+        {
+            System.out.println("This application may not work properly in your OS");
+            System.out.println("It is Designed for Windows | Linux | MAC OS\n");
+        }
         currentDirPath = mainDirPath;
         userInput = new Scanner(System.in);
         rep = new RegularExpressionPattern();
@@ -164,21 +170,37 @@ class setup{
 
     public static void backToPath(){
         try{
-            if(currentDirPath.length()>1)
+            if(currentDirPath.length()>0)
             {
                 if(!(currentDirPath.equals(mainDirPath)))
                 {
                     File path = new File(currentDirPath);
-                    if(path.getParent() == null)
+
+                    if(SystemUtils.IS_OS_LINUX || SystemUtils.IS_OS_MAC)
                     {
-                        currentDirPath = mainDirPath;
+                        if (currentDirPath.equals("/"))
+                        {
+                            currentDirPath = mainDirPath;
+                        }
+                        else{
+                            currentDirPath = path.getParent();
+                        }
                     }
                     else{
-                        currentDirPath = path.getParent();
+                        if(path.getParent() == null)
+                        {
+                            currentDirPath = mainDirPath;
+                        }
+                        else{
+                            currentDirPath = path.getParent();
+                        }
                     }
                 }
+                listFilesAndFolders();
             }
-            listFilesAndFolders();
+            else{
+                System.out.println("Empty Current Path");
+            }
         }
         catch (ArrayIndexOutOfBoundsException ex)
         {
@@ -222,29 +244,55 @@ class setup{
                 File[] files = Arrays.stream(filesAndFolders)
                         .filter(File::isFile)
                         .toArray(File[]::new);
-
-                // Sort directories and files
-                Arrays.sort(directories, Comparator.comparing(File::getName));
-                Arrays.sort(files, Comparator.comparing(File::getName));
-
-                System.out.println("------Directory------");
-                // Print directories
-                for (File directory : directories) {
-                    String permissions = utilsFunction.getPermissions(directory);
-                    String formattedName = directory.getName();
-                    System.out.printf("%s%s %-9s %-20s%n", "d", permissions, "", formattedName);
+                if(directories.length == 0 && files.length == 0)
+                {
+                    System.out.println("Empty folder");
                 }
-                System.out.println("------Files------");
-                // Print files
-                for (File file : files) {
-                    String fileType = "-";
-                    String permissions = utilsFunction.getPermissions(file);
-                    String size = utilsFunction.formatSize(file.length());
-                    String formattedName = file.getName();
-                    System.out.printf("%s%s %-10s %-20s%n", fileType, permissions, size, formattedName);
+                else{
+                    if(directories.length>1){
+                        // Sort directories
+                        Arrays.sort(directories, Comparator.comparing(File::getName));
+                    }
+                    if(files.length>1)
+                    {
+                        // Sort files
+                        Arrays.sort(files, Comparator.comparing(File::getName));
+                    }
+
+                    System.out.println("------Directory------");
+
+                    if(directories.length==0)
+                    {
+                        System.out.println("No any directories found");
+                    }
+                    else{
+                        // Print directories
+                        for (File directory : directories) {
+                            String permissions = utilsFunction.getPermissions(directory);
+                            String formattedName = directory.getName();
+                            System.out.printf("%s%s %-9s %-20s%n", "d", permissions, "", formattedName);
+                        }
+                    }
+
+                    System.out.println("------Files------");
+                    // Print files
+                    if(files.length==0)
+                    {
+                        System.out.println("No any files found");
+                    }
+                    else{
+                        for (File file : files) {
+                            String fileType = "-";
+                            String permissions = utilsFunction.getPermissions(file);
+                            String size = utilsFunction.formatSize(file.length());
+                            String formattedName = file.getName();
+                            System.out.printf("%s%s %-10s %-20s%n", fileType, permissions, size, formattedName);
+                        }
+                    }
                 }
+
             } else {
-                System.out.println("Folder is empty");
+                System.out.println("Empty Folder");
             }
 
             System.out.println("\nhelp (Show the command list)");
@@ -323,8 +371,26 @@ class setup{
             listFilesAndFolders();
             return;
         }
-        if (!file.isAbsolute()) {
-            file = new File(currentDirPath + "\\" + file.getPath());
+        if(SystemUtils.IS_OS_LINUX || SystemUtils.IS_OS_MAC)
+        {
+            if(currentDirPath.equals("/"))
+            {
+                file = new File("/"+extractedFolderName);
+            }
+            else{
+                if (!file.isAbsolute()) {
+                    file = new File(currentDirPath + "/" + file.getPath());
+                }
+            }
+        }
+        else{
+            if(!SystemUtils.IS_OS_WINDOWS)
+            {
+                System.out.println("This app may be not work properly because it's not designed for this os\n");
+            }
+            if (!file.isAbsolute()) {
+                file = new File(currentDirPath + "\\" + file.getPath());
+            }
         }
         if(file.exists() && file.isDirectory())
         {
@@ -334,6 +400,7 @@ class setup{
         else{
             System.out.println("Folder not found");
         }
+
     }
 
     private static void operationRenameFolderBasic(String op){

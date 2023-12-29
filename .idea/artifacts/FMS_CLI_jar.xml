@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="FMS-CLI:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/FMS_CLI_jar</output-path>
+    <root id="archive" name="FMS-CLI.jar">
+      <element id="module-output" name="FMS-CLI" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
