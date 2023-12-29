@@ -30,7 +30,7 @@ public class RegularExpressionPattern {
     final Pattern findFileGlobPattern = Pattern.compile("^(find -g )");
     final Pattern selectFilePattern = Pattern.compile("^(select -file )");
     final Pattern selectFolderPattern = Pattern.compile("^(select -dir )");
-    final Pattern selectOperationHelpTextPattern = Pattern.compile("^(select | select -h)");
+    final Pattern selectOperationHelpTextPattern = Pattern.compile("^(select|select -h)");
     final String folderNamePattern = "^[^\\\\/|?:*<>\"]*$";
 
 
