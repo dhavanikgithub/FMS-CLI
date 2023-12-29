@@ -26,6 +26,7 @@ with the file system.
 9. **File or Folder Details** : `prp filename or foldername or path`
 10. **Help** : `help`
 11. **Terminate Application** : `exit` or `quit` or `stop`
+12. **Select Operation** : File: `select -file fileSerialNumber` Folder: `select -dir folderSerialNumber`
 
 
 ## Compatible
