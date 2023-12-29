@@ -45,7 +45,7 @@ public class HelpText {
         helpText.append("mv     : `mv` command for move the files or folder\n");
         helpText.append("find   : `find` command for search files by using name or extension\n");
         helpText.append("prp    : `prp` command for show file details\n");
-        helpText.append("select    : `select` command for select any file or folder based on serial number and perform above operation on it.\n");
+        helpText.append("select : `select` command for select any file or folder based on serial number and perform above operation on it.\n");
         System.out.println(helpText);
     }
 
