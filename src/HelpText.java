@@ -29,8 +29,9 @@ public class HelpText {
         }
         else if (rep.matchPattern(rep.propertiesHelpTextPattern,command)) {
             propertiesHelpText();
-        }
-        else{
+        } else if (rep.matchPattern(rep.selectOperationHelpTextPattern,command)) {
+            selectHelpText();
+        } else{
             System.out.println("Invalid command `"+command+"`");
         }
     }
@@ -44,6 +45,7 @@ public class HelpText {
         helpText.append("mv     : `mv` command for move the files or folder\n");
         helpText.append("find   : `find` command for search files by using name or extension\n");
         helpText.append("prp    : `prp` command for show file details\n");
+        helpText.append("select    : `select` command for select any file or folder based on serial number and perform above operation on it.\n");
         System.out.println(helpText);
     }
 
@@ -107,6 +109,15 @@ public class HelpText {
         StringBuilder helpText = new StringBuilder();
         helpText.append("prp or prp -h\n-> for help\n");
         helpText.append("prp [fileName or folderName]\n-> for show files details like size, createDate, etc\n");
+        System.out.println(helpText);
+    }
+
+    public static void selectHelpText()
+    {
+        StringBuilder helpText = new StringBuilder();
+        helpText.append("select or select -h\n-> for help\n");
+        helpText.append("select -file fileSerialNumber\n-> for select the file and perform operation [cp, rename, mv, del, prp]\n");
+        helpText.append("select -dir folderSerialNumber\n-> for select the folder and perform operation [cp, rename, mv, del, prp, open, list]\n");
         System.out.println(helpText);
     }
 }

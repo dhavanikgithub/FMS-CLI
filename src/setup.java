@@ -15,6 +15,11 @@ class setup{
 
     public static Scanner userInput = null;
 
+    public static File[] currentListedDirectories;
+
+    public static File[] currentListedFiles;
+
+
 
     public static void main(String[] args){
         if(!SystemUtils.IS_OS_WINDOWS && !SystemUtils.IS_OS_LINUX && SystemUtils.IS_OS_MAC)
@@ -34,7 +39,7 @@ class setup{
             if(!Objects.equals(op, ""))
             {
                 if (rep.matchPattern(rep.exitPattern,op)) {
-                    return;
+                    System.exit(0);
                 }
                 else if(rep.matchPattern(rep.createFolderPattern,op))
                 {
@@ -99,8 +104,83 @@ class setup{
                 else if(rep.matchPattern(rep.findFilePattern,op))
                 {
                     operationFindFiles(op,false);
-                }
-                else{
+                } else if (rep.matchPattern(rep.selectFilePattern,op)) {
+                    if(currentListedFiles==null || currentListedFiles.length==0)
+                    {
+                        System.out.println("No any files found");
+                        continue;
+                    }
+                    int extractedFileNumber;
+                    try{
+                        extractedFileNumber = Integer.parseInt(op.replace("select -file ","").strip());
+                    }
+                    catch (Exception ex)
+                    {
+                        extractedFileNumber = 0;
+                    }
+                    if(extractedFileNumber>currentListedFiles.length || extractedFileNumber<=0)
+                    {
+                        System.out.println("Invalid file number found");
+                        continue;
+                    }
+                    File filePath = currentListedFiles[extractedFileNumber-1];
+                    if(!filePath.exists() || !filePath.isFile())
+                    {
+                        System.out.println("File not found");
+                        continue;
+                    }
+                    System.out.println("File selected");
+                    System.out.print(filePath.getName()+"> ");
+                    String fileOperation = userInput.nextLine().strip();
+                    switch (fileOperation) {
+                        case "cp" -> operationCopyAndNavPastFile("cp -file " + filePath.getName());
+                        case "mv" -> operationMoveAndNavPastFile("mv -file " + filePath.getName());
+                        case "del" -> operationDeleteFiles("del -file " + filePath.getName());
+                        case "rename" -> operationRenameFileBasic("rename -file " + filePath.getName());
+                        case "prp" -> viewFileProperties("prp " + filePath.getName());
+                    }
+
+                } else if (rep.matchPattern(rep.selectFolderPattern,op)) {
+                    if(currentListedDirectories==null || currentListedDirectories.length==0)
+                    {
+                        System.out.println("No any folder found");
+                        continue;
+                    }
+                    int extractedFolderNumber;
+                    try{
+                        extractedFolderNumber = Integer.parseInt(op.replace("select -dir ","").strip());
+                    }
+                    catch (Exception ex)
+                    {
+                        extractedFolderNumber = 0;
+                    }
+                    if(extractedFolderNumber>currentListedDirectories.length || extractedFolderNumber<=0)
+                    {
+                        System.out.println("Invalid folder number found");
+                        continue;
+                    }
+                    File folderPath = currentListedDirectories[extractedFolderNumber-1];
+                    if(!folderPath.exists() || !folderPath.isDirectory())
+                    {
+                        System.out.println("Folder not found");
+                        continue;
+                    }
+                    System.out.println("Folder selected");
+                    System.out.print(folderPath.getName()+"> ");
+                    String fileOperation = userInput.nextLine().strip();
+                    switch (fileOperation) {
+                        case "cp" -> operationCopyAndNavPastFolder("cp -dir " + folderPath.getName());
+                        case "mv" -> operationMoveAndNavPastFolder("mv -dir " + folderPath.getName());
+                        case "del" -> operationDeleteFolder("del -dir " + folderPath.getName());
+                        case "rename" -> operationRenameFolderBasic("rename -dir " + folderPath.getName());
+                        case "prp" -> viewFileProperties("prp " + folderPath.getName());
+                        case "open" -> operationOpenFolder("open " + folderPath.getName());
+                        case "list" -> {
+                            currentDirPath = folderPath.getPath();
+                            listFilesAndFolders();
+                        }
+                    }
+                } else{
                     HelpText.matchCommand(op);
                 }
 
@@ -237,56 +317,59 @@ class setup{
 
             if (filesAndFolders != null) {
                 // Separate directories and files
-                File[] directories = Arrays.stream(filesAndFolders)
+                currentListedDirectories = Arrays.stream(filesAndFolders)
                         .filter(File::isDirectory)
                         .toArray(File[]::new);
 
-                File[] files = Arrays.stream(filesAndFolders)
+                currentListedFiles = Arrays.stream(filesAndFolders)
                         .filter(File::isFile)
                         .toArray(File[]::new);
-                if(directories.length == 0 && files.length == 0)
+                if(currentListedDirectories.length == 0 && currentListedFiles.length == 0)
                 {
                     System.out.println("Empty folder");
                 }
                 else{
-                    if(directories.length>1){
+                    if(currentListedDirectories.length>1){
                         // Sort directories
-                        Arrays.sort(directories, Comparator.comparing(File::getName));
+                        Arrays.sort(currentListedDirectories, Comparator.comparing(File::getName));
                     }
-                    if(files.length>1)
+                    if(currentListedFiles.length>1)
                     {
                         // Sort files
-                        Arrays.sort(files, Comparator.comparing(File::getName));
+                        Arrays.sort(currentListedFiles, Comparator.comparing(File::getName));
                     }
 
                     System.out.println("------Directory------");
 
-                    if(directories.length==0)
+                    if(currentListedDirectories.length==0)
                     {
                         System.out.println("No any directories found");
                     }
                     else{
+                        int counter = 1;
                         // Print directories
-                        for (File directory : directories) {
+                        for (File directory : currentListedDirectories) {
                             String permissions = utilsFunction.getPermissions(directory);
                             String formattedName = directory.getName();
-                            System.out.printf("%s%s %-9s %-20s%n", "d", permissions, "", formattedName);
+                            System.out.printf("%-5d %s%s %-9s %-20s%n", counter++, "d", permissions, "", formattedName);
                         }
                     }
 
                     System.out.println("------Files------");
                     // Print files
-                    if(files.length==0)
+                    if(currentListedFiles.length==0)
                     {
                         System.out.println("No any files found");
                     }
                     else{
-                        for (File file : files) {
+                        int counter = 1;
+                        for (File file : currentListedFiles) {
                             String fileType = "-";
                             String permissions = utilsFunction.getPermissions(file);
                             String size = utilsFunction.formatSize(file.length());
                             String formattedName = file.getName();
-                            System.out.printf("%s%s %-10s %-20s%n", fileType, permissions, size, formattedName);
+                            System.out.printf("%-5d %s%s %-10s %-20s%n", counter++,fileType, permissions, size, formattedName);
+
                         }
                     }
                 }
@@ -639,13 +722,13 @@ class setup{
                 return;
             }
 
-            int flag = 0;
             while (true){
-                System.out.print("Paste (Y|N) or Navigate: ");
+                System.out.print("["+currentDirPath+"] Paste (Y|N) or Navigate: ");
                 String newOperation = userInput.nextLine();
                 if(!newOperation.isEmpty())
                 {
-                    if(newOperation.equals("y") || newOperation.equals("Y"))
+
+                    if(newOperation.equalsIgnoreCase("y"))
                     {
                         if(currentDirPath.equals(mainDirPath))
                         {
@@ -665,17 +748,17 @@ class setup{
                         FMS_CLI.copyFolder(sourcePath.getPath(),destinationPath.getPath());
                         break;
                     }
-                    else if(newOperation.equals("n") || newOperation.equals("N"))
+                    else if(newOperation.equalsIgnoreCase("n"))
                     {
                         break;
                     } else if (rep.matchPattern(rep.openFolderPattern,newOperation)) {
-                        flag++;
                         operationOpenFolder(newOperation);
                     }
                     else if(rep.matchPattern(rep.backToFolderPattern,newOperation))
                     {
                         backToPath();
-                        flag--;
+                    } else if (newOperation.equalsIgnoreCase("exit")) {
+                        System.exit(0);
                     }
                 }
             }
@@ -740,13 +823,12 @@ class setup{
             }
             if(sourcePath.exists() && sourcePath.isFile())
             {
-                int flag = 0;
                 while (true){
-                    System.out.print("Paste (Y|N) or Navigate: ");
+                    System.out.print("["+currentDirPath+"] Paste (Y|N) or Navigate: ");
                     String newOperation = userInput.nextLine();
                     if(!newOperation.isEmpty())
                     {
-                        if(newOperation.equals("y") || newOperation.equals("Y"))
+                        if(newOperation.equalsIgnoreCase("y"))
                         {
                             if(currentDirPath.equals(mainDirPath))
                             {
@@ -766,17 +848,18 @@ class setup{
                             FMS_CLI.copyFile(sourcePath.getPath(),destinationPath.getPath());
                             break;
                         }
-                        else if(newOperation.equals("n") || newOperation.equals("N"))
+                        else if(newOperation.equalsIgnoreCase("n"))
                         {
                             break;
                         } else if (rep.matchPattern(rep.openFolderPattern,newOperation)) {
-                            flag++;
                             operationOpenFolder(newOperation);
                         }
                         else if(rep.matchPattern(rep.backToFolderPattern,newOperation))
                         {
                             backToPath();
-                            flag--;
+                        }
+                        else if (newOperation.equalsIgnoreCase("exit")) {
+                            System.exit(0);
                         }
                     }
                 }
@@ -844,13 +927,13 @@ class setup{
                 System.out.println("Folder not found");
                 return;
             }
-            int flag = 0;
+
             while (true){
-                System.out.print("Paste (Y|N) or Navigate: ");
+                System.out.print("["+currentDirPath+"] Paste (Y|N) or Navigate: ");
                 String newOperation = userInput.nextLine();
                 if(!newOperation.isEmpty())
                 {
-                    if(newOperation.equals("y") || newOperation.equals("Y"))
+                    if(newOperation.equalsIgnoreCase("y"))
                     {
                         if(currentDirPath.equals(mainDirPath))
                         {
@@ -870,17 +953,18 @@ class setup{
                         FMS_CLI.moveFolder(sourcePath.getPath(),destinationPath.getPath());
                         break;
                     }
-                    else if(newOperation.equals("n") || newOperation.equals("N"))
+                    else if(newOperation.equalsIgnoreCase("n"))
                     {
                         break;
                     } else if (rep.matchPattern(rep.openFolderPattern,newOperation)) {
-                        flag++;
                         operationOpenFolder(newOperation);
                     }
                     else if(rep.matchPattern(rep.backToFolderPattern,newOperation))
                     {
                         backToPath();
-                        flag--;
+                    }
+                    else if (newOperation.equalsIgnoreCase("exit")) {
+                        System.exit(0);
                     }
                 }
             }
@@ -908,13 +992,12 @@ class setup{
                 System.out.println("File not found");
                 return;
             }
-            int flag = 0;
             while (true){
-                System.out.print("Paste (Y|N) or Navigate: ");
+                System.out.print("["+currentDirPath+"] Paste (Y|N) or Navigate: ");
                 String newOperation = userInput.nextLine();
                 if(!newOperation.isEmpty())
                 {
-                    if(newOperation.equals("y") || newOperation.equals("Y"))
+                    if(newOperation.equalsIgnoreCase("y"))
                     {
                         if(currentDirPath.equals(mainDirPath))
                         {
@@ -934,17 +1017,18 @@ class setup{
                         FMS_CLI.moveFile(sourcePath.getPath(),destinationPath.getPath());
                         break;
                     }
-                    else if(newOperation.equals("n") || newOperation.equals("N"))
+                    else if(newOperation.equalsIgnoreCase("n"))
                     {
                         break;
                     } else if (rep.matchPattern(rep.openFolderPattern,newOperation)) {
-                        flag++;
                         operationOpenFolder(newOperation);
                     }
                     else if(rep.matchPattern(rep.backToFolderPattern,newOperation))
                     {
                         backToPath();
-                        flag--;
+                    }
+                    else if (newOperation.equalsIgnoreCase("exit")) {
+                        System.exit(0);
                     }
                 }
             }
