@@ -46,6 +46,8 @@ public class HelpText {
         helpText.append("find   : `find` command for search files by using name or extension\n");
         helpText.append("prp    : `prp` command for show file details\n");
         helpText.append("select : `select` command for select any file or folder based on serial number and perform above operation on it.\n");
+        helpText.append("list   : `list` command for list out files and folders of current path\n");
+        helpText.append("back   : `back` command for back to parent path.\n");
         System.out.println(helpText);
     }
 

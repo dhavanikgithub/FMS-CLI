@@ -8,20 +8,6 @@ import java.util.regex.Pattern;
 
 public class utilsFunction {
 
-
-    /*public static ArrayList<String> extractMultiplePaths(String userInput, String pattern) {
-        ArrayList<String> result = new ArrayList<>();
-        Pattern regex = Pattern.compile(pattern);
-        Matcher matcher = regex.matcher(userInput);
-
-        if (matcher.find()) {
-            for (int i = 1; i <= matcher.groupCount(); i++) {
-                result.add(matcher.group(i));
-            }
-        }
-        return result;
-    }*/
-
     public static ArrayList<String> parseDeleteFilesCommand(String input){
         String regex = "\"([^\"]+)\"|\\S+";
 

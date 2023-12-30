@@ -34,7 +34,7 @@ class setup{
 
         for(;;)
         {
-            System.out.print(currentDirPath+">: ");
+            System.out.print(currentDirPath.toLowerCase()+">: ");
             String op = (userInput.nextLine()).strip();
             if(!Objects.equals(op, ""))
             {
@@ -147,13 +147,14 @@ class setup{
         }
         System.out.println("File selected");
         System.out.print(filePath.getName()+"> ");
-        String fileOperation = userInput.nextLine().strip();
+        String fileOperation = userInput.nextLine().strip().toLowerCase(Locale.ENGLISH);
         switch (fileOperation) {
             case "cp" -> operationCopyAndNavPastFile("cp -file " + filePath.getName());
             case "mv" -> operationMoveAndNavPastFile("mv -file " + filePath.getName());
             case "del" -> operationDeleteFiles("del -file " + filePath.getName());
             case "rename" -> operationRenameFileBasic("rename -file " + filePath.getName());
             case "prp" -> viewFileProperties("prp " + filePath.getName());
+            case "exit" ->  System.exit(0);
         }
     }
 
@@ -197,6 +198,7 @@ class setup{
                 currentDirPath = folderPath.getPath();
                 listFilesAndFolders();
             }
+            case "exit" ->  System.exit(0);
         }
     }
     public static void operationFindFiles(String op, Boolean isGloble){
@@ -309,7 +311,7 @@ class setup{
                 System.out.println("Drive : " + sysDrive);
             }
             System.out.println("\nhelp (Show the command list)");
-            System.out.println("exit|quit|stop : Terminate application\n");
+            System.out.println("exit : Terminate application\n");
             return;
         }
         try {
@@ -390,7 +392,7 @@ class setup{
             }
 
             System.out.println("\nhelp (Show the command list)");
-            System.out.println("exit|quit|stop : Terminate application\n");
+            System.out.println("exit : Terminate application\n");
         } catch (Exception ex) {
             System.out.println("Something went wrong");
         }
@@ -399,7 +401,7 @@ class setup{
     private static void operationCreateFolder(String op)
     {
         try{
-            String extractedFolderName = op.replace("create -dir ","").strip();
+            String extractedFolderName = op.replaceFirst(rep.createFolderPattern.toString(),"").strip();
             if(!utilsFunction.isValidFolderName(extractedFolderName))
             {
                 return;
@@ -429,7 +431,7 @@ class setup{
     private static void operationCreateFile(String op)
     {
         try{
-            String extractedFileName = op.replace("create -file ","").strip();
+            String extractedFileName = op.replaceFirst(rep.createFilePattern.toString(),"").strip();
             if(!utilsFunction.isValidFileName(extractedFileName))
             {
                 return;
@@ -452,7 +454,7 @@ class setup{
 
     private static void operationOpenFolder(String op)
     {
-        String extractedFolderName = op.replace("open ","").strip();
+        String extractedFolderName = op.replaceFirst(rep.openFolderPattern.toString(),"").strip();
 
         File file = new File(extractedFolderName);
         if(file.getPath().equalsIgnoreCase(currentDirPath))
@@ -499,7 +501,7 @@ class setup{
 
     private static void operationRenameFolderBasic(String op){
         try{
-            String extractedFolderName = op.replace("rename -dir ","").strip();
+            String extractedFolderName = op.replaceFirst(rep.renameFolderPattern.toString(),"").strip();
             File sourcePath = new File(extractedFolderName);
             File destinationPath;
             if(!sourcePath.isAbsolute())
@@ -535,47 +537,10 @@ class setup{
         }
     }
 
-    /*private static void operationRenameFolder(String op)
-    {
-        try{
-            ArrayList<String> filePaths = utilsFunction.extractMultiplePaths(op,"rename\\s+-dir\\s+(\\S+)\\s+(\\S+)");
-            File sourcePath = new File(filePaths.get(0));
-            File destinationPath = new File(filePaths.get(1));
-            if(!sourcePath.isAbsolute())
-            {
-                sourcePath = new File(currentDirPath.get(0)+pathSeparator+sourcePath.getPath());
-            }
-            if(!destinationPath.isAbsolute())
-            {
-                destinationPath = new File(currentDirPath.get(0)+pathSeparator+destinationPath.getPath());
-            }
-            if(!sourcePath.exists() || sourcePath.isFile() || sourcePath.getPath().equals(currentDirPath.get(0)) || sourcePath.getName().equals("."))
-            {
-                System.out.println("Folder not found");
-                return;
-            }
-            if(destinationPath.exists() && destinationPath.isDirectory())
-            {
-                System.out.println("Folder name already exist");
-                return;
-            }
-            if (!Files.isWritable(Paths.get(sourcePath.getPath()))) {
-                System.out.println(sourcePath.getName()+" : Permission denied");
-                return;
-            }
-            FMS_CLI.renameFolder(sourcePath.getPath(),destinationPath.getPath());
-        }
-        catch (Exception ex)
-        {
-            operationRenameFolderBasic(op);
-            //System.out.println("Due to invalid input failed to rename");
-        }
-    }*/
-
     private static void operationRenameFileBasic(String op)
     {
         try{
-            String extractedFolderName = op.replace("rename -file ","").strip();
+            String extractedFolderName = op.replaceFirst(rep.renameFilePattern.toString(),"").strip();
             File sourcePath = new File(extractedFolderName);
             File destinationPath;
             if(!sourcePath.isAbsolute())
@@ -613,43 +578,6 @@ class setup{
         }
     }
 
-    /*private static void operationRenameFile(String op)
-    {
-        try{
-            ArrayList<String> filePaths = utilsFunction.extractMultiplePaths(op,"rename\\s+(\\S+)\\s+(\\S+)");
-            File sourcePath = new File(filePaths.get(0));
-            File destinationPath = new File(filePaths.get(1));
-            if(!sourcePath.isAbsolute())
-            {
-                sourcePath = new File(currentDirPath.get(0)+pathSeparator+sourcePath.getPath());
-            }
-            if(!destinationPath.isAbsolute())
-            {
-                destinationPath = new File(currentDirPath.get(0)+pathSeparator+destinationPath.getPath());
-            }
-            if(destinationPath.exists() && destinationPath.isFile())
-            {
-                System.out.println("File name already exist");
-                return;
-            }
-            if(!sourcePath.exists())
-            {
-                System.out.println("File not found to rename");
-                return;
-            }
-            if (!Files.isWritable(Paths.get(sourcePath.getPath()))) {
-                System.out.println(sourcePath.getName()+" : Permission denied");
-                return;
-            }
-            FMS_CLI.renameFile(sourcePath.getPath(),destinationPath.getPath());
-
-        }
-        catch (Exception ex)
-        {
-            operationRenameFileBasic(op);
-        }
-    }*/
-
     private static void operationDeleteFolder(String op)
     {
         try{
@@ -663,7 +591,7 @@ class setup{
                 }
                 else if(deleteFolderConfirmation.equalsIgnoreCase("yes"))
                 {
-                    String extractedFolderName = op.replace("del -dir ","").strip();
+                    String extractedFolderName = op.replaceFirst(rep.deleteFolderPattern.toString(),"").strip();
                     File folderPath = new File(extractedFolderName);
                     if(!folderPath.isAbsolute())
                     {
@@ -689,7 +617,7 @@ class setup{
     private static void operationDeleteFiles(String op)
     {
         try{
-            String extractedFileName = op.replace("del -file ","");
+            String extractedFileName = op.replaceFirst(rep.deleteFilePattern.toString(),"");
             ArrayList<String> fileNames = utilsFunction.parseDeleteFilesCommand(extractedFileName);
             for(String fileName : fileNames){
                 File fileObject = new File(currentDirPath+"//"+fileName);
@@ -719,7 +647,7 @@ class setup{
     private static void operationCopyAndNavPastFolder(String op)
     {
         try{
-            String extractedFolderName = op.replace("cp -dir ","").strip();
+            String extractedFolderName = op.replaceFirst(rep.copyFolderPattern.toString(),"").strip();
             File sourcePath = new File(extractedFolderName);
             File destinationPath;
             if(!sourcePath.isAbsolute())
@@ -734,7 +662,7 @@ class setup{
             }
 
             while (true){
-                System.out.print("["+currentDirPath+"] Paste (Y|N) or Navigate: ");
+                System.out.print("["+currentDirPath.toLowerCase()+"] Paste (Y|N) or Navigate: ");
                 String newOperation = userInput.nextLine();
                 if(!newOperation.isEmpty())
                 {
@@ -773,7 +701,6 @@ class setup{
                     }
                 }
             }
-            //listFilesAndFolders();
         }
         catch (Exception ex)
         {
@@ -781,50 +708,10 @@ class setup{
         }
     }
 
-    /*private static void operationCopyFolder(String op)
-    {
-        try{
-            ArrayList<String> extractedPaths = utilsFunction.extractMultiplePaths(op,"cp\\s+-dir\\s+(\\S+)\\s+(\\S+)");
-            File sourcePath = new File(extractedPaths.get(0));
-            File destinationPath = new File(extractedPaths.get(1));
-            if(!sourcePath.isAbsolute())
-            {
-                sourcePath = new File(currentDirPath+"//"+sourcePath.getPath());
-            }
-
-            if(!sourcePath.exists() || !rep.isValidPath(sourcePath.getPath()) || sourcePath.isFile() || sourcePath.getPath().equals(currentDirPath) || sourcePath.getName().equals("."))
-            {
-                System.out.println("Folder not found");
-                return;
-            }
-
-            if(!destinationPath.isAbsolute())
-            {
-                destinationPath = new File(currentDirPath+"//"+destinationPath.getPath());
-            }
-
-            if(destinationPath.exists() && destinationPath.isDirectory())
-            {
-                System.out.println("Folder already exist on destination");
-                return;
-            }
-            if (!Files.isReadable(Paths.get(sourcePath.getPath()))) {
-                System.out.println(sourcePath.getName()+" : Permission denied");
-                return;
-            }
-            FMS_CLI.copyFolder(sourcePath.getPath(),destinationPath.getPath());
-        }
-        catch (Exception ex)
-        {
-            operationCopyAndNavPastFolder(op);
-            //System.out.println("Invalid Input");
-        }
-    }*/
-
     private static void operationCopyAndNavPastFile(String op)
     {
         try{
-            String extractedFileName = op.replace("cp -file ","").strip();
+            String extractedFileName = op.replaceFirst(rep.copyFilePattern.toString(),"").strip();
             File sourcePath = new File(extractedFileName);
             File destinationPath;
 
@@ -835,7 +722,7 @@ class setup{
             if(sourcePath.exists() && sourcePath.isFile())
             {
                 while (true){
-                    System.out.print("["+currentDirPath+"] Paste (Y|N) or Navigate: ");
+                    System.out.print("["+currentDirPath.toLowerCase()+"] Paste (Y|N) or Navigate: ");
                     String newOperation = userInput.nextLine();
                     if(!newOperation.isEmpty())
                     {
@@ -885,47 +772,10 @@ class setup{
         }
     }
 
-    /*private static void operationCopyFile(String op)
-    {
-        try{
-            ArrayList<String> extractedPaths = utilsFunction.extractMultiplePaths(op,"cp\\s+(\\S+)\\s+(\\S+)");
-            File sourcePath = new File(extractedPaths.get(0));
-            File destinationPath = new File(extractedPaths.get(1));
-            if(!sourcePath.isAbsolute())
-            {
-                sourcePath = new File(currentDirPath+"//"+sourcePath.getPath());
-            }
-            if(!destinationPath.isAbsolute())
-            {
-                destinationPath = new File(currentDirPath+"//"+destinationPath.getPath());
-            }
-            if(!sourcePath.exists() || sourcePath.isDirectory())
-            {
-                System.out.println("File not found");
-                return;
-            }
-            if(destinationPath.exists() && destinationPath.isFile())
-            {
-                System.out.println("File already exist on destination");
-                return;
-            }
-            if (!Files.isReadable(Paths.get(sourcePath.getPath()))) {
-                System.out.println(sourcePath.getName()+" : Permission denied");
-                return;
-            }
-            FMS_CLI.copyFile(sourcePath.getPath(),destinationPath.getPath());
-        }
-        catch (Exception ex)
-        {
-            operationCopyAndNavPastFile(op);
-        }
-
-    }*/
-
     private static void operationMoveAndNavPastFolder(String op)
     {
         try{
-            String extractedFileName = op.replace("mv -dir ","").strip();
+            String extractedFileName = op.replaceFirst(rep.moveFolderPattern.toString(),"").strip();
             File sourcePath = new File(extractedFileName);
             File destinationPath;
             if(!sourcePath.isAbsolute())
@@ -940,7 +790,7 @@ class setup{
             }
 
             while (true){
-                System.out.print("["+currentDirPath+"] Paste (Y|N) or Navigate: ");
+                System.out.print("["+currentDirPath.toLowerCase()+"] Paste (Y|N) or Navigate: ");
                 String newOperation = userInput.nextLine();
                 if(!newOperation.isEmpty())
                 {
@@ -990,7 +840,7 @@ class setup{
     private static void operationMoveAndNavPastFile(String op)
     {
         try{
-            String extractedFileName = op.replace("mv -file ","").strip();
+            String extractedFileName = op.replaceFirst(rep.moveFilePattern.toString(),"").strip();
             File sourcePath = new File(extractedFileName);
             File destinationPath;
             if(!sourcePath.isAbsolute())
@@ -1004,7 +854,7 @@ class setup{
                 return;
             }
             while (true){
-                System.out.print("["+currentDirPath+"] Paste (Y|N) or Navigate: ");
+                System.out.print("["+currentDirPath.toLowerCase()+"] Paste (Y|N) or Navigate: ");
                 String newOperation = userInput.nextLine();
                 if(!newOperation.isEmpty())
                 {
@@ -1051,84 +901,10 @@ class setup{
 
     }
 
-    /*private static void operationMoveFolder(String op)
-    {
-        try{
-            ArrayList<String> extractedPaths = utilsFunction.extractMultiplePaths(op,"mv\\s+-dir\\s+(\\S+)\\s+(\\S+)");
-            File sourcePath = new File(extractedPaths.get(0));
-            File destinationPath = new File(extractedPaths.get(1));
-            if(!sourcePath.isAbsolute())
-            {
-                sourcePath = new File(currentDirPath+"//"+sourcePath.getPath());
-            }
-            if(!destinationPath.isAbsolute())
-            {
-                destinationPath = new File(currentDirPath+"//"+destinationPath.getPath());
-            }
-            if(!sourcePath.exists() || !rep.isValidPath(sourcePath.getPath()) || sourcePath.isFile() || sourcePath.getPath().equals(currentDirPath) || sourcePath.getName().equals("."))
-            {
-                System.out.println("Folder not found");
-                return;
-            }
-            if (destinationPath.exists() && destinationPath.isDirectory())
-            {
-                System.out.println("Can't move folder already exist");
-                return;
-            }
-            if (!Files.isWritable(Paths.get(sourcePath.getPath()))) {
-                System.out.println(sourcePath.getName()+" : Permission denied");
-                return;
-            }
-            FMS_CLI.moveFolder(sourcePath.getPath(),destinationPath.getPath());
-        }
-        catch (Exception ex)
-        {
-            System.out.println("Invalid Input");
-        }
-
-    }
-
-    private static void operationMoveFile(String op)
-    {
-        try{
-            ArrayList<String> extractedPaths = utilsFunction.extractMultiplePaths(op,"mv\\s+(\\S+)\\s+(\\S+)");
-            File sourcePath = new File(extractedPaths.get(0));
-            File destinationPath = new File(extractedPaths.get(1));
-            if(!sourcePath.isAbsolute())
-            {
-                sourcePath = new File(currentDirPath+"//"+sourcePath.getPath());
-            }
-            if(!destinationPath.isAbsolute())
-            {
-                destinationPath = new File(currentDirPath+"//"+destinationPath.getPath());
-            }
-            if(!sourcePath.exists() || sourcePath.isDirectory())
-            {
-                System.out.println("File not found");
-                return;
-            }
-            if(destinationPath.exists() && destinationPath.isFile())
-            {
-                System.out.println("File already exist");
-                return;
-            }
-            if (!Files.isWritable(Paths.get(sourcePath.getPath()))) {
-                System.out.println(sourcePath.getName()+" : Permission denied");
-                return;
-            }
-            FMS_CLI.moveFile(sourcePath.getPath(),destinationPath.getPath());
-        }
-        catch (Exception ex)
-        {
-            System.out.println("Invalid Input");
-        }
-
-    }*/
-
     private static void viewFileProperties(String op)
     {
         try{
-            String extractedFileName = op.replace("prp ","");
+            String extractedFileName = op.replaceFirst(rep.filePropertyPattern.toString(),"");
             File filePath = new File(extractedFileName);
             if(!filePath.isAbsolute())
             {
