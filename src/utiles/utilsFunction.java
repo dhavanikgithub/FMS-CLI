@@ -1,14 +1,22 @@
 package utiles;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class utilsFunction {
 
-    public static ArrayList<String> parseDeleteFilesCommand(String input){
+    public static ArrayList<String> parseCommand(String input){
         String regex = "\"([^\"]+)\"|\\S+";
 
         Pattern pattern = Pattern.compile(regex);
@@ -25,6 +33,25 @@ public class utilsFunction {
         return filesName;
     }
 
+    public static boolean isEmpty(Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            try (DirectoryStream<Path> directory = Files.newDirectoryStream(path)) {
+                return !directory.iterator().hasNext();
+            }
+        }
+
+        return false;
+    }
+
+    public static String convertToSentenceCase(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
+        String lowercased = input.toLowerCase();
+        return Character.toUpperCase(lowercased.charAt(0)) + lowercased.substring(1);
+    }
+
     public static boolean isValidFileName(String fileName) {
         // Regular expression for a valid file name
         String regex = "^[^\\\\/:*?\"<>|]*$";
@@ -34,7 +61,7 @@ public class utilsFunction {
         if (matcher.matches()) {
             return true;
         } else {
-            System.out.println("Characters are not valid in name: \\ / : * ? \" < > |");
+            System.out.println(fileName+" := Characters are not valid in name: \\ / : * ? \" < > |");
             return false;
         }
     }

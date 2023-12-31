@@ -11,12 +11,19 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 public class FMS_CLI {
     static int copiedFolders = 0;
     static int copiedFiles = 0;
     static int deletedFiles = 0;
     static int deletedFolders = 0;
+    static int movedFolders = 0;
+    static int movedFiles = 0;
+
+    static int failedOperations = 0;
+
+
     public static void createFile(String filePath) throws Exception{
         File file = new File(filePath);
         boolean result;
@@ -53,7 +60,7 @@ public class FMS_CLI {
         // if renameTo() return true then if block is
         // executed
         if (flag) {
-            System.out.println("File Successfully Rename");
+            System.out.println("File successfully renamed.");
         }
         // if renameTo() return false then else block is
         // executed
@@ -62,7 +69,7 @@ public class FMS_CLI {
             if (!Files.isWritable(Paths.get(sourcePath))) {
                 System.out.println("Permission denied");
             } else {
-                System.out.println("Operation Failed");
+                System.out.println("Operation failed");
             }
         }
     }
@@ -72,44 +79,28 @@ public class FMS_CLI {
         Path newPath = oldPath.resolveSibling(newFolderName);
         // Rename the folder
         Files.move(oldPath, newPath, StandardCopyOption.ATOMIC_MOVE);
-        System.out.println("Folder renamed successfully.");
+        if(new File(newFolderName).exists())
+        {
+            System.out.println("Folder renamed successfully.");
+        }
+        else{
+            System.out.println("Folder rename unsuccessful.");
+        }
     }
 
-    /*public static void deleteFolder(String folderPath) throws Exception {
-        Path folderToDelete = Paths.get(folderPath);
-
-        // Delete the folder and its contents recursively
-        Files.walkFileTree(folderToDelete, new SimpleFileVisitor<>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                if (exc == null) {
-                    Files.delete(dir);
-                    return FileVisitResult.CONTINUE;
-                } else {
-                    // Directory iteration failed
-                    throw exc;
-                }
-            }
-        });
-
-        System.out.println("Folder deleted successfully.");
-    }*/
 
     public static void deleteFolder(String folderPath) {
+
         long startTime = System.currentTimeMillis();
-
+        failedOperations=0;
         Path folderToDelete = Paths.get(folderPath);
-
+        final boolean[] skipALL = {false};
+        final boolean[] terminate = {false};
         // Counter for tracking the number of deleted items
         final int[] deletedItems = {0};
 
         try{
+
             // Get the total number of files and subdirectories to delete
             int totalItems = (int) Files.walk(folderToDelete).count();
 
@@ -117,6 +108,32 @@ public class FMS_CLI {
             Files.walkFileTree(folderToDelete, new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (!Files.isWritable(file)) {
+                        failedOperations++;
+                        System.out.print("\nFile: "+file.toAbsolutePath()+" : Permission denied\n");
+                        if(!skipALL[0])
+                        {
+                            System.out.print("\n1. Skip Once\n");
+                            System.out.println("2. SkipAll directories and files related to this");
+                            System.out.println("3. Cancel Operation");
+                            boolean condition = true;
+                            Scanner sc = new Scanner(System.in);
+                            while(condition)
+                            {
+                                System.out.print("Select Options: ");
+                                String userOptionSelect = sc.nextLine();
+
+                                switch (userOptionSelect){
+                                    case "1" -> {condition=false;}
+                                    case "2" -> {skipALL[0] =true;condition=false;}
+                                    case "3" -> {terminate[0] = true; updateProgressBar("Deleting: ", deletedItems[0], totalItems); return FileVisitResult.TERMINATE;}
+                                    default -> System.out.println("Incorrect option");
+                                }
+                            }
+                            updateProgressBar("Deleting: ", deletedItems[0], totalItems);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
                     Files.delete(file);
                     deletedFiles++;
                     deletedItems[0]++;
@@ -133,7 +150,21 @@ public class FMS_CLI {
 
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    if(terminate[0])
+                    {
+                        return FileVisitResult.TERMINATE;
+                    }
                     if (exc == null) {
+                        if(!utilsFunction.isEmpty(dir))
+                        {
+                            return FileVisitResult.CONTINUE;
+                        }
+                        if (!Files.isWritable(dir)) {
+                            failedOperations++;
+                            System.out.print("\nDirectory: "+dir.toAbsolutePath()+" : Permission denied\n");
+                            updateProgressBar("Deleting: ", deletedItems[0], totalItems);
+                            return FileVisitResult.CONTINUE;
+                        }
                         Files.delete(dir);
                         deletedFolders++;
                         deletedItems[0]++;
@@ -145,14 +176,26 @@ public class FMS_CLI {
                     }
                 }
             });
-            System.out.println("\rFolder deleted successfully.");
+            if(terminate[0])
+            {
+                System.out.print("\nOperation Terminated.\n");
+            }
+            else{
+                if(!new File(folderPath).exists())
+                {
+                    System.out.print("\nThe folder was deleted successfully.\n");
+                }
+                else{
+                    System.out.print("\nFolder deletion was unsuccessful.\n");
+                }
+            }
         }
         catch (AccessDeniedException e) {
-            System.out.println("\rAccess denied while deleting the folder");
+            System.out.print("\nAccess was denied while deleting the folder.\n");
         }
         catch (Exception ex)
         {
-            System.out.println("\rInvalid input found");
+            System.err.print("\nError: "+ex+"\n");
         }
         finally {
             long endTime = System.currentTimeMillis();
@@ -161,10 +204,9 @@ public class FMS_CLI {
 
             System.out.println("Deleted files: " + deletedFiles);
             System.out.println("Deleted folders: " + deletedFolders);
+            System.out.println("Failed Delete: " + failedOperations);
             System.out.println("Total time taken: " + formatDuration(duration));
         }
-
-
 
     }
 
@@ -197,60 +239,28 @@ public class FMS_CLI {
             }
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
-            System.out.println("\nFile copied successfully.");
+            if(new File(destinationFilePath).exists())
+            {
+                System.out.println("\nThe file was copied successfully.");
+            }
+            else{
+                System.out.println("\nFile copy was unsuccessful.");
+            }
             System.out.println("From: "+sourceFilePath);
             System.out.println("To: "+destinationFilePath);
             System.out.println("Total time taken: " + formatDuration(duration));
         }
     }
 
-
-    /*public static void copyFile(String sourceFilePath, String destinationFilePath) throws IOException {
-        Path sourcePath = Paths.get(sourceFilePath);
-        Path destinationPath = Paths.get(destinationFilePath);
-
-        // Copy the file
-        Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
-        System.out.println("File copied successfully.");
-    }*/
-
-    /*public static void copyFolder(String sourceFolderPath, String destinationFolderPath) throws IOException
-    {
-        Path sourcePath = Paths.get(sourceFolderPath);
-        Path destinationPath = Paths.get(destinationFolderPath);
-
-        // Copy the folder and its contents recursively
-        Files.walkFileTree(sourcePath, new SimpleFileVisitor<>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                Path relativePath = sourcePath.relativize(dir);
-                Path targetPath = destinationPath.resolve(relativePath);
-                Files.createDirectories(targetPath);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Path relativePath = sourcePath.relativize(file);
-                Path targetPath = destinationPath.resolve(relativePath);
-                Files.copy(file, targetPath, StandardCopyOption.REPLACE_EXISTING);
-                return FileVisitResult.CONTINUE;
-            }
-        });
-
-        System.out.println("Folder copied successfully.");
-        System.out.println("From: "+sourceFolderPath);
-        System.out.println("To: "+destinationFolderPath);
-    }*/
-
     public static void copyFolder(String sourceFolderPath, String destinationFolderPath) throws IOException {
         long startTime = System.currentTimeMillis();
         Path sourcePath = Paths.get(sourceFolderPath);
         Path destinationPath = Paths.get(destinationFolderPath);
-
+        final boolean[] skipALL = {false,false};
+        final boolean[] terminate = {false};
         // Get the total number of files and subdirectories to copy
         int totalItems = (int) Files.walk(sourcePath).count();
-
+        failedOperations=0;
         // Counter for tracking the number of copied items
         final int[] copiedItems = {0};
 
@@ -258,6 +268,33 @@ public class FMS_CLI {
         Files.walkFileTree(sourcePath, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                if (!Files.isReadable(dir)) {
+                    failedOperations++;
+                    System.out.print("\nFile: "+dir.toAbsolutePath()+" : Permission denied\n");
+                    if(!skipALL[0])
+                    {
+                        Scanner sc = new Scanner(System.in);
+                        System.out.print("\n1. Skip Once\n");
+                        System.out.println("2. SkipAll directories and files related to this");
+                        System.out.println("3. Cancel Operation");
+                        boolean condition = true;
+                        while(condition)
+                        {
+                            System.out.print("Select Options: ");
+
+                            String userOptionSelect = sc.nextLine();
+
+                            switch (userOptionSelect){
+                                case "1" -> {condition=false;}
+                                case "2" -> {skipALL[0] =true;condition=false;}
+                                case "3" -> {terminate[0] = true; updateProgressBar("Copying: ",copiedItems[0], totalItems); return FileVisitResult.TERMINATE;}
+                                default -> System.out.println("Incorrect option");
+                            }
+                        }
+                        updateProgressBar("Copying: ",copiedItems[0], totalItems);
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
                 Path relativePath = sourcePath.relativize(dir);
                 Path targetPath = destinationPath.resolve(relativePath);
                 Files.createDirectories(targetPath);
@@ -269,6 +306,36 @@ public class FMS_CLI {
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if(terminate[0])
+                    return  FileVisitResult.TERMINATE;
+                if (!Files.isReadable(file)) {
+                    failedOperations++;
+                    System.out.print("\nFile: "+file.toAbsolutePath()+" : Permission denied\n");
+                    if(!skipALL[0])
+                    {
+                        Scanner sc = new Scanner(System.in);
+                        System.out.print("\n1. Skip Once\n");
+                        System.out.println("2. SkipAll directories and files related to this");
+                        System.out.println("3. Cancel Operation");
+                        boolean condition = true;
+                        while(condition)
+                        {
+                            System.out.print("Select Options: ");
+
+                            String userOptionSelect = sc.nextLine();
+
+                            switch (userOptionSelect){
+                                case "1" -> {condition=false;}
+                                case "2" -> {skipALL[0] =true;condition=false;}
+                                case "3" -> {terminate[0] = true; updateProgressBar("Copying: ",copiedItems[0], totalItems); return FileVisitResult.TERMINATE;}
+                                default -> System.out.println("Incorrect option");
+                            }
+                        }
+                        updateProgressBar("Copying: ",copiedItems[0], totalItems);
+                    }
+
+                    return FileVisitResult.CONTINUE;
+                }
                 Path relativePath = sourcePath.relativize(file);
                 Path targetPath = destinationPath.resolve(relativePath);
                 Files.copy(file, targetPath, StandardCopyOption.REPLACE_EXISTING);
@@ -280,11 +347,25 @@ public class FMS_CLI {
         });
         long endTime = System.currentTimeMillis();
         long duration = endTime - startTime;
-        System.out.println("\nFolder copied successfully.");
+        if(terminate[0])
+        {
+            System.out.println("\nOperation Terminated.");
+        }
+        else{
+            if(new File(destinationFolderPath).exists())
+            {
+                System.out.println("\nThe folder has been copied successfully.");
+            }
+            else{
+                System.out.println("\n");
+            }
+        }
+
         System.out.println("From: " + sourceFolderPath);
         System.out.println("To: " + destinationFolderPath);
         System.out.println("Folders copied: " + copiedFolders);
         System.out.println("Files copied: " + copiedFiles);
+        System.out.println("Failed to copy: " + failedOperations);
         System.out.println("Total time taken: " + formatDuration(duration));
     }
 
@@ -297,20 +378,179 @@ public class FMS_CLI {
         Files.move(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
         long endTime = System.currentTimeMillis();
         long duration = endTime - startTime;
-        System.out.println("File moved successfully.");
+        if(!new File(sourceFilePath).exists() && new File(destinationFilePath).exists())
+        {
+            System.out.println("File moved successfully.");
+        }
+
         System.out.println("Total time taken: " + formatDuration(duration));
     }
 
-    public static void moveFolder(String sourceFolderPath, String destinationFolderPath) throws IOException {
+    public static void moveFolder(String sourceFolderPath, String destinationFolderPath) {
         long startTime = System.currentTimeMillis();
-        Path sourcePath = Paths.get(sourceFolderPath);
-        Path destinationPath = Paths.get(destinationFolderPath);
-        // Move (rename) the folder and its contents recursively
-        Files.move(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
-        long endTime = System.currentTimeMillis();
-        long duration = endTime - startTime;
-        System.out.println("Folder moved successfully.");
-        System.out.println("Total time taken: " + formatDuration(duration));
+        try{
+            Path sourcePath = Paths.get(sourceFolderPath);
+            Path destinationPath = Paths.get(destinationFolderPath);
+            // Get the total number of files and subdirectories to copy
+            int totalItems = (int) Files.walk(sourcePath).count();
+            failedOperations=0;
+            // Counter for tracking the number of copied items
+            final int[] movedItems = {0};
+            final boolean[] skipALL = {false,false};
+            final boolean[] terminate = {false};
+            Files.walkFileTree(sourcePath, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    if (!Files.isWritable(dir)) {
+                        failedOperations++;
+                        System.out.print("\nDirectory: "+dir.toAbsolutePath()+" : Permission denied\n");
+                        if(!skipALL[0])
+                        {
+                            Scanner sc = new Scanner(System.in);
+                            System.out.print("\n1. Skip Once\n");
+                            System.out.println("2. SkipAll directories and files related to this");
+                            System.out.println("3. Cancel Operation");
+                            boolean condition = true;
+                            while(condition)
+                            {
+                                System.out.print("Select Options: ");
+
+                                String userOptionSelect = sc.nextLine();
+
+                                switch (userOptionSelect){
+                                    case "1" -> {condition=false;}
+                                    case "2" -> {skipALL[0] =true;condition=false;}
+                                    case "3" -> {terminate[0] = true; updateProgressBar("Moving: ",movedItems[0], totalItems); return FileVisitResult.TERMINATE;}
+                                    default -> System.out.println("Incorrect option");
+                                }
+                            }
+                            updateProgressBar("Moving: ",movedItems[0], totalItems);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                    Path targetPath = destinationPath.resolve(sourcePath.relativize(dir));
+                    Files.createDirectories(targetPath);
+                    movedFolders++;
+                    movedItems[0]++;
+                    updateProgressBar("Moving: ",movedItems[0], totalItems);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if(terminate[0])
+                    {
+                        return FileVisitResult.TERMINATE;
+                    }
+                    if (!Files.isWritable(file)) {
+                        failedOperations++;
+                        System.out.print("\nFile: "+file.toAbsolutePath()+" : Permission denied\n");
+                        if(!skipALL[0])
+                        {
+                            Scanner sc = new Scanner(System.in);
+                            System.out.print("\n1. Skip Once\n");
+                            System.out.println("2. SkipAll directories and files related to this");
+                            System.out.println("3. Cancel Operation");
+                            boolean condition = true;
+                            while(condition)
+                            {
+                                System.out.print("Select Options: ");
+
+                                String userOptionSelect = sc.nextLine();
+
+                                switch (userOptionSelect){
+                                    case "1" -> {condition=false;}
+                                    case "2" -> {skipALL[0] =true;condition=false;}
+                                    case "3" -> {terminate[0] = true; updateProgressBar("Moving: ",movedItems[0], totalItems); return FileVisitResult.TERMINATE;}
+                                    default -> System.out.println("Incorrect option");
+                                }
+                            }
+                            updateProgressBar("Moving: ",movedItems[0], totalItems);
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                    Path targetPath = destinationPath.resolve(sourcePath.relativize(file));
+                    Files.move(file, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                    movedFiles++;
+                    movedItems[0]++;
+                    updateProgressBar("Moving: ",movedItems[0], totalItems);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    if(terminate[0])
+                    {
+                        return FileVisitResult.TERMINATE;
+                    }
+                    // Handle failure to visit a file (e.g., permission issues)
+                    System.out.println("Failed to visit file: " + file.toString());
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    if(terminate[0])
+                    {
+                        return FileVisitResult.TERMINATE;
+                    }
+                    if(!utilsFunction.isEmpty(dir))
+                    {
+                        return FileVisitResult.CONTINUE;
+                    }
+                    if (!Files.isWritable(dir)) {
+                        return FileVisitResult.CONTINUE;
+                    }
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+            // Move (rename) the folder and its contents recursively
+            //Files.move(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+            if(terminate[0])
+            {
+                System.out.println("\nOperation terminated.");
+            }
+            else{
+                if(!new File(sourceFolderPath).exists() && new File(destinationFolderPath).exists())
+                {
+                    System.out.println("\nFolder moved successfully.");
+                }
+                else{
+                    System.out.println("\nFolder move unsuccessful.");
+                }
+            }
+
+        }
+        catch (DirectoryNotEmptyException dne)
+        {
+            System.out.printf("%nFolder move unsuccessful : [%s]%n",dne);
+        }
+        catch (FileAlreadyExistsException e) {
+            System.out.printf("%nDestination file already exists: [%s]%n",e);
+        } catch (AccessDeniedException e) {
+            System.out.printf("%nAccess denied: [%s]%n",e);
+        } catch (SecurityException e) {
+            System.out.printf("%nSecurity exception: [%s]%n",e);
+        }
+        catch (IOException e) {
+            System.out.printf("%nAn I/O error occurred: [%s]%n",e);
+        }
+        catch (Exception ex)
+        {
+            System.out.printf("%nUnknown error occurred: [%s]%n",ex);
+        }
+        finally {
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            System.out.println("From: " + sourceFolderPath);
+            System.out.println("To: " + destinationFolderPath);
+            System.out.println("Folders moved: " + movedFolders);
+            System.out.println("Files moved: " + movedFiles);
+            System.out.println("Failed to move: " + failedOperations);
+            System.out.printf("Total time taken: %s%n",formatDuration(duration));
+        }
+
     }
 
     public static void printFileInfo(String filePath) throws Exception {

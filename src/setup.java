@@ -10,15 +10,10 @@ import java.util.*;
 class setup{
     public static String mainDirPath = "root";
     public static String currentDirPath;
-
     public static RegularExpressionPattern rep = null;
-
     public static Scanner userInput = null;
-
     public static File[] currentListedDirectories;
-
     public static File[] currentListedFiles;
-
     public static String pathSeparator = "/";
 
     public static void main(String[] args){
@@ -105,12 +100,15 @@ class setup{
                 else if(rep.matchPattern(rep.findFilePattern,op))
                 {
                     operationFindFiles(op,false);
-                } else if (rep.matchPattern(rep.selectFilePattern,op)) {
+                }
+                else if (rep.matchPattern(rep.selectFilePattern,op)) {
                     operationSelectFile(op);
 
-                } else if (rep.matchPattern(rep.selectFolderPattern,op)) {
+                }
+                else if (rep.matchPattern(rep.selectFolderPattern,op)) {
                     operationSelectFolder(op);
-                } else{
+                }
+                else{
                     HelpText.matchCommand(op);
                 }
 
@@ -128,7 +126,7 @@ class setup{
         }
         int extractedFileNumber;
         try{
-            extractedFileNumber = Integer.parseInt(op.replace("select -file ","").strip());
+            extractedFileNumber = Integer.parseInt(op.replaceFirst(rep.selectFilePattern.toString(),"").strip());
         }
         catch (Exception ex)
         {
@@ -151,7 +149,7 @@ class setup{
         switch (fileOperation) {
             case "cp" -> operationCopyAndNavPastFile("cp -file " + filePath.getName());
             case "mv" -> operationMoveAndNavPastFile("mv -file " + filePath.getName());
-            case "del" -> operationDeleteFiles("del -file " + filePath.getName());
+            case "del" -> operationDeleteFiles("del -file \"" + filePath.getName()+"\"");
             case "rename" -> operationRenameFileBasic("rename -file " + filePath.getName());
             case "prp" -> viewFileProperties("prp " + filePath.getName());
             case "exit" ->  System.exit(0);
@@ -167,7 +165,7 @@ class setup{
         }
         int extractedFolderNumber;
         try{
-            extractedFolderNumber = Integer.parseInt(op.replace("select -dir ","").strip());
+            extractedFolderNumber = Integer.parseInt(op.replaceFirst(rep.selectFolderPattern.toString(),"").strip());
         }
         catch (Exception ex)
         {
@@ -407,12 +405,14 @@ class setup{
                 return;
             }
             File file = new File(extractedFolderName);
-            if (!file.isAbsolute()) {
+            if (!file.isAbsolute())
+            {
                 file = new File(currentDirPath+pathSeparator+file.getPath());
             }
             if(rep.isValidFolderName(file.getName()))
             {
-                if (!Files.isWritable(Paths.get(file.getParent()))) {
+                if (!Files.isWritable(Paths.get(file.getParent())))
+                {
                     System.out.println("Permission denied to create folder");
                     return;
                 }
@@ -432,7 +432,26 @@ class setup{
     {
         try{
             String extractedFileName = op.replaceFirst(rep.createFilePattern.toString(),"").strip();
-            if(!utilsFunction.isValidFileName(extractedFileName))
+            ArrayList<String> fileNames = utilsFunction.parseCommand(extractedFileName);
+            for(String filename : fileNames)
+            {
+                if(!utilsFunction.isValidFileName(filename))
+                {
+                    continue;
+                }
+                File file = new File(Objects.requireNonNull(filename));
+                if (!file.isAbsolute())
+                {
+                    file = new File(currentDirPath+pathSeparator+filename);
+                }
+                if (!Files.isWritable(Paths.get(file.getParent())))
+                {
+                    System.out.println("Permission denied to create the file.");
+                    return;
+                }
+                FMS_CLI.createFile(file.getPath());
+            }
+            /*if(!utilsFunction.isValidFileName(extractedFileName))
             {
                 return;
             }
@@ -444,7 +463,7 @@ class setup{
                 System.out.println("Permission denied to create file");
                 return;
             }
-            FMS_CLI.createFile(file.getPath());
+            FMS_CLI.createFile(file.getPath());*/
         }
         catch (Exception ex)
         {
@@ -583,7 +602,7 @@ class setup{
         try{
             while (true)
             {
-                System.out.print("Are you want sure delete folder (YES|NO): ");
+                System.out.print("Are you sure you want to delete the folder? (YES|NO): ");
                 String deleteFolderConfirmation = userInput.nextLine().strip();
                 if(deleteFolderConfirmation.equalsIgnoreCase("no"))
                 {
@@ -592,6 +611,7 @@ class setup{
                 else if(deleteFolderConfirmation.equalsIgnoreCase("yes"))
                 {
                     String extractedFolderName = op.replaceFirst(rep.deleteFolderPattern.toString(),"").strip();
+
                     File folderPath = new File(extractedFolderName);
                     if(!folderPath.isAbsolute())
                     {
@@ -602,41 +622,64 @@ class setup{
                         System.out.println("Folder not found");
                         return;
                     }
+                    if (!Files.isWritable(Paths.get(folderPath.getParent()))) {
+                        System.out.println("Permission denied to delete the folder.");
+                        return;
+                    }
                     FMS_CLI.deleteFolder(folderPath.getPath());
-                    break;
+                    return;
                 }
             }
 
         }
         catch (Exception ex)
         {
-            System.out.println("\nInvalid input found");
+            System.out.println("\nInvalid input detected.");
         }
     }
 
     private static void operationDeleteFiles(String op)
     {
         try{
-            String extractedFileName = op.replaceFirst(rep.deleteFilePattern.toString(),"");
-            ArrayList<String> fileNames = utilsFunction.parseDeleteFilesCommand(extractedFileName);
-            for(String fileName : fileNames){
-                File fileObject = new File(currentDirPath+"//"+fileName);
-                if(fileObject.exists() && fileObject.isFile())
+            while (true)
+            {
+                System.out.print("Are you sure you want to delete the files? (YES|NO): ");
+                String deleteFileConfirmation = userInput.nextLine().strip();
+                if(deleteFileConfirmation.equalsIgnoreCase("no"))
                 {
-                    if (!Files.isWritable(Paths.get(fileObject.getPath()))) {
-                        System.out.println(fileObject.getName()+" : Permission denied");
-                        continue;
-                    }
-                    if (fileObject.delete()) {
-                        System.out.println(fileObject.getName()+" : Deleted");
-                    } else {
-                        System.out.println(fileObject.getName()+" : Failed to Delete");
-                    }
+                    break;
                 }
-                else{
-                    System.out.println(fileObject.getName()+" : file not found");
+                else if(deleteFileConfirmation.equalsIgnoreCase("yes"))
+                {
+                    String extractedFileName = op.replaceFirst(rep.deleteFilePattern.toString(),"");
+                    ArrayList<String> fileNames = utilsFunction.parseCommand(extractedFileName);
+                    for(String fileName : fileNames){
+
+                        File fileObject = new File(fileName);
+                        if(!fileObject.isAbsolute())
+                        {
+                            fileObject = new File(currentDirPath+"//"+fileName);
+                        }
+                        if(fileObject.exists() && fileObject.isFile())
+                        {
+                            if (!Files.isWritable(Paths.get(fileObject.getPath()))) {
+                                System.out.println(fileObject.getName()+" : Permission denied");
+                                continue;
+                            }
+                            if (fileObject.delete()) {
+                                System.out.println(fileObject.getName()+" : Deleted");
+                            } else {
+                                System.out.println(fileObject.getName()+" : Failed to Delete");
+                            }
+                        }
+                        else{
+                            System.out.println(fileObject.getName()+" : file not found");
+                        }
+                    }
+                    return;
                 }
             }
+
         }
         catch (Exception ex)
         {
@@ -671,17 +714,22 @@ class setup{
                     {
                         if(currentDirPath.equals(mainDirPath))
                         {
-                            System.out.println("Not possible to past");
+                            System.out.println("Unable to paste.");
                             continue;
                         }
                         destinationPath = new File(currentDirPath+"//"+sourcePath.getName());
                         if(destinationPath.exists() && destinationPath.isDirectory())
                         {
-                            System.out.println("Folder already exist on destination");
+                            System.out.println("A folder name already exists at the destination.");
                             break;
                         }
                         if (!Files.isReadable(Paths.get(sourcePath.getPath()))) {
-                            System.out.println(sourcePath.getName()+" : Permission denied");
+                            System.out.println(sourcePath.getPath()+" : Permission denied to read folder");
+                            break;
+                        }
+                        if (!Files.isWritable(Paths.get(destinationPath.getParent())))
+                        {
+                            System.out.println(destinationPath.getPath()+" : Permission denied to write folder");
                             break;
                         }
                         FMS_CLI.copyFolder(sourcePath.getPath(),destinationPath.getPath());
@@ -736,11 +784,16 @@ class setup{
                             destinationPath = new File(currentDirPath+"//"+sourcePath.getName());
                             if(destinationPath.exists() && destinationPath.isFile())
                             {
-                                System.out.println("File already exist on destination");
+                                System.out.println("A file name already exists at the destination.");
                                 break;
                             }
                             if (!Files.isReadable(Paths.get(sourcePath.getPath()))) {
-                                System.out.println(sourcePath.getName()+" : Permission denied");
+                                System.out.println(sourcePath.getPath()+" : Permission denied to read file");
+                                break;
+                            }
+                            if(!Files.isWritable(Paths.get(destinationPath.getParent())))
+                            {
+                                System.out.println(destinationPath.getPath()+" : Permission denied to write file");
                                 break;
                             }
                             FMS_CLI.copyFile(sourcePath.getPath(),destinationPath.getPath());
@@ -798,17 +851,22 @@ class setup{
                     {
                         if(currentDirPath.equals(mainDirPath))
                         {
-                            System.out.println("Not possible to past");
+                            System.out.println("Unable to paste.");
                             continue;
                         }
                         destinationPath = new File(currentDirPath+"//"+sourcePath.getName());
                         if(destinationPath.exists() && destinationPath.isDirectory())
                         {
-                            System.out.println("Folder already exist on destination");
+                            System.out.println("A folder name already exists at the destination.");
                             break;
                         }
                         if (!Files.isWritable(Paths.get(sourcePath.getPath()))) {
-                            System.out.println(sourcePath.getName()+" : Permission denied");
+                            System.out.println(sourcePath.getPath()+" : Permission denied at source");
+                            break;
+                        }
+                        if(!Files.isWritable(Paths.get(destinationPath.getParent())))
+                        {
+                            System.out.println(destinationPath.getPath()+" : Permission denied at destination");
                             break;
                         }
                         FMS_CLI.moveFolder(sourcePath.getPath(),destinationPath.getPath());
@@ -832,7 +890,7 @@ class setup{
         }
         catch (Exception ex)
         {
-            System.out.println("Invalid Input");
+            System.out.println(ex);
         }
 
     }
@@ -862,17 +920,22 @@ class setup{
                     {
                         if(currentDirPath.equals(mainDirPath))
                         {
-                            System.out.println("Not possible to past");
+                            System.out.println("Unable to paste.");
                             continue;
                         }
                         destinationPath = new File(currentDirPath+"//"+sourcePath.getName());
                         if(destinationPath.exists() && destinationPath.isFile())
                         {
-                            System.out.println("File already exist on destination");
+                            System.out.println("A file name already exists at the destination.");
                             break;
                         }
                         if (!Files.isWritable(Paths.get(sourcePath.getPath()))) {
-                            System.out.println(sourcePath.getName()+" : Permission denied");
+                            System.out.println(sourcePath.getPath()+" : Permission denied at source");
+                            break;
+                        }
+                        if(!Files.isWritable(Paths.get(destinationPath.getParent())))
+                        {
+                            System.out.println(destinationPath.getPath()+" : Permission denied at destination");
                             break;
                         }
                         FMS_CLI.moveFile(sourcePath.getPath(),destinationPath.getPath());

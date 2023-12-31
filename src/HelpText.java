@@ -37,89 +37,90 @@ public class HelpText {
     }
     public static void helpText(){
         StringBuilder helpText = new StringBuilder();
-        helpText.append("create : `create` command for create new file or folder\n");
-        helpText.append("open   : `open` command for read file or open folder and list it's files and folder\n");
-        helpText.append("rename : `rename` command for rename the files or folder\n");
-        helpText.append("del    : `del` command for delete the files or folder\n");
-        helpText.append("cp     : `cp` command for copy the files or folder\n");
-        helpText.append("mv     : `mv` command for move the files or folder\n");
-        helpText.append("find   : `find` command for search files by using name or extension\n");
-        helpText.append("prp    : `prp` command for show file details\n");
-        helpText.append("select : `select` command for select any file or folder based on serial number and perform above operation on it.\n");
-        helpText.append("list   : `list` command for list out files and folders of current path\n");
-        helpText.append("back   : `back` command for back to parent path.\n");
+        helpText.append("`create`  : Create a new file or folder.\n");
+        helpText.append("`open`    : Open a folder, and list its files and folders.\n");
+        helpText.append("`rename`  : Rename files or folders.\n");
+        helpText.append("`del`     : Delete files or folders.\n");
+        helpText.append("`cp`      : Copy files or folders.\n");
+        helpText.append("`mv`      : Move files or folders.\n");
+        helpText.append("`find`    : Search for files by name or extension.\n");
+        helpText.append("`prp`     : Show file details.\n");
+        helpText.append("`select`  : Select a file or folder based on the serial number and perform the above operations on it.\n");
+        helpText.append("`list`    : List out files and folders in the current path.\n");
+        helpText.append("`back`    : Go back to the parent path.\n");
+
         System.out.println(helpText);
     }
 
     public static void createHelpText(){
         StringBuilder helpText = new StringBuilder();
-        helpText.append("create or create -h\n-> for help\n");
-        helpText.append("create [fileName] \n-> for create empty file\n");
-        helpText.append("create -dir [folderName]\n-> for create empty folder\n");
+        helpText.append("create or create -h\n-> For help\n");
+        helpText.append("create -file [fileName1] [fileName2] ... \n-> To create an empty file.\n");
+        helpText.append("create -dir [folderName]\n-> To create an empty folder.\n");
         System.out.println(helpText);
     }
 
     public static void openHelpText()
     {
         StringBuilder helpText = new StringBuilder();
-        helpText.append("open or open -h\n-> for help\n");
-        helpText.append("open [folderName]\n-> for navigate folder and list files and folders\n");
+        helpText.append("open or open -h\n-> For help.\n");
+        helpText.append("open [folderName]\n-> For navigating the folder and listing files and folders.\n");
         System.out.println(helpText);
     }
     public static void renameHelpText()
     {
         StringBuilder helpText = new StringBuilder();
-        helpText.append("rename or rename -h\n-> for help\n");
-        helpText.append("rename -file [filename]\n-> for rename file\n");
-        helpText.append("rename -dir [foldername]\n-> for rename folder\n");
+        helpText.append("rename or rename -h\n-> For help\n");
+        helpText.append("rename -file [filename]\n-> To rename the file.\n");
+        helpText.append("rename -dir [foldername]\n-> To rename the folder.\n");
         System.out.println(helpText);
     }
     public static void deleteHelpText()
     {
         StringBuilder helpText = new StringBuilder();
-        helpText.append("del or del -h\n-> for help\n");
-        helpText.append("del -file [fileName1] [fileName2] ...\n-> for delete multiple files\n");
-        helpText.append("del -dir [folderName]\n-> for delete folder\n");
+        helpText.append("del or del -h\n-> For help\n");
+        helpText.append("del -file [fileName1] [fileName2] ...\n-> To delete multiple files.\n");
+        helpText.append("del -dir [folderName]\n-> To delete the folder.\n");
         System.out.println(helpText);
     }
     public static void copyHelpText()
     {
         StringBuilder helpText = new StringBuilder();
-        helpText.append("cp or cp -h\n-> for help\n");
-        helpText.append("cp -file [filename]\n-> for copy file\n");
-        helpText.append("cp -dir [foldername]\n-> for copy folder\n");
+        helpText.append("cp or cp -h\n-> For help\n");
+        helpText.append("cp -file [filename]\n-> For copying the file.\n");
+        helpText.append("cp -dir [foldername]\n-> For copying the folder.\n");
         System.out.println(helpText);
     }
     public static void moveHelpText()
     {
         StringBuilder helpText = new StringBuilder();
-        helpText.append("mv or mv -h\n-> for help\n");
-        helpText.append("mv -file [filename]\n-> for move file\n");
-        helpText.append("mv -dir [foldername]\n-> for move folder\n");
+        helpText.append("mv or mv -h\n-> For help\n");
+        helpText.append("mv -file [filename]\n-> For moving the file.\n");
+        helpText.append("mv -dir [foldername]\n-> For moving the folder.\n");
         System.out.println(helpText);
     }
     public static void findHelpText()
     {
         StringBuilder helpText = new StringBuilder();
-        helpText.append("find or find -h\n-> for help\n");
-        helpText.append("find [fileName or extension]\n-> for search the file in current path\n");
-        helpText.append("find -g [fileName or extension]\n-> for search the file in global\n");
+        helpText.append("find or find -h\n-> For help\n");
+        helpText.append("find [fileName or extension]\n-> For searching the file in the current path.\n");
+        helpText.append("find -g [fileName or extension]\n-> For searching the file globally.\n");
         System.out.println(helpText);
     }
     public static void propertiesHelpText()
     {
         StringBuilder helpText = new StringBuilder();
-        helpText.append("prp or prp -h\n-> for help\n");
-        helpText.append("prp [fileName or folderName]\n-> for show files details like size, createDate, etc\n");
+        helpText.append("prp or prp -h\n-> For help\n");
+        helpText.append("prp [fileName or folderName]\n-> For displaying file details such as size, creation date, etc.\n");
         System.out.println(helpText);
     }
 
     public static void selectHelpText()
     {
         StringBuilder helpText = new StringBuilder();
-        helpText.append("select or select -h\n-> for help\n");
-        helpText.append("select -file fileSerialNumber\n-> for select the file and perform operation [cp, rename, mv, del, prp]\n");
-        helpText.append("select -dir folderSerialNumber\n-> for select the folder and perform operation [cp, rename, mv, del, prp, open, list]\n");
+        helpText.append("select or select -h\n-> For help\n");
+        helpText.append("select -file fileSerialNumber\n-> For selecting the file and performing an operation, choose from the options: [cp, rename, mv, del, prp].\n");
+        helpText.append("select -dir folderSerialNumber\n-> For selecting the folder and performing operations, choose from the following options: [cp, rename, mv, del, prp, open, list].\n");
         System.out.println(helpText);
     }
 }
