@@ -15,7 +15,7 @@ move files/folders.
 with the file system.
 
 #### Commands
-1. **Create Operation** : File: `create -file filename or path` Folder: `create -dir foldername or path`
+1. **Create Operation** : File: `create -file [filename1/path1] [filename2/path2] .....` Folder: `create -dir foldername or path`
 2. **Rename Operation** : File `rename -file filename or path` Folder: `rename -dir foldername or path`
 3. **Copy Operation** : File: `cp -file filename or path` Folder: `cp -dir foldername or path`
 4. **Move Operation** : File: `mv -file filename or path` Folder: `mv -dir foldername or path`
